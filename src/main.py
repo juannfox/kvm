@@ -18,6 +18,7 @@ RELEASE_GET_URL_TEMPLATE = (
 
 
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
+    """Identify the latest available Kubeclt version."""
     log.debug(f"Fetching latest version: GET {provider_url}.")
     response = requests.get(provider_url, timeout=DEFAULT_HTTP_TIMEOUT)
 
@@ -81,21 +82,8 @@ def generate_release_url(spec: ReleaseSpec) -> str:
         )
 
 
-# Logging options
-LOG_LEVEL = "DEBUG" if getenv("DEBUG") == "1" else "INFO"
-log.basicConfig(level=LOG_LEVEL)
-
-app = typer.Typer()
-
-
-@app.command()
-def latest():
-    latest_version = fetch_latest_version()
-    ReleaseSpec.validate_version(latest_version)
-    log.info(f"Latest kubectl version: {latest_version}.")
-
-
-def download_kubectl(version: str = None):
+def download_kubectl(version: str = None, out_file: str = "kubectl"):
+    """Download a kubectl release to disk."""
     if version is None:
         log.debug("Version not provided.")
         version = fetch_latest_version()
@@ -105,20 +93,43 @@ def download_kubectl(version: str = None):
     log.debug(f"Downloading kubectl release from: {release_get_url}.")
     download_response = requests.get(
             release_get_url, stream=True, timeout=DEFAULT_HTTP_TIMEOUT)
-    with open("kubectl", "wb") as f:
+    with open(out_file, "wb") as f:
         for chunk in download_response.iter_content(chunk_size=1024):
             if chunk:
                 f.write(chunk)
         f.close()
 
-    log.info(f"Downloaded kubectl {version}.")
+    log.info(f"Downloaded kubectl {version} to {out_file}.")
+
+
+######################################################################
+
+
+# Logging options
+LOG_LEVEL = "DEBUG" if getenv("DEBUG") == "1" else "INFO"
+log.basicConfig(level=LOG_LEVEL)
+
+app = typer.Typer()
 
 
 @app.command()
-def download(version: Annotated[Optional[str], typer.Argument()] = None):
+def latest():
     """
-    Download a kubectl release. If no version is specified, the latest
-    will be downloaded. Version should be in the format 'vX.Y.Z'.
+    Identify the latest available Kubeclt version, as per
+    the Kuberentes official site.
+    """
+    latest_version = fetch_latest_version()
+    ReleaseSpec.validate_version(latest_version)
+    log.info(f"Latest kubectl version: {latest_version}.")
+
+
+@app.command()
+def download(
+    version: Annotated[Optional[str],
+                       typer.Argument(envvar="KVM_VERSION_TARGET")] = None):
+    """
+    Download a kubectl release. If no version is specified, the latest will
+    be downloaded; the version should be in the format 'vX.Y.Z'.
     """
     download_kubectl(version)
 

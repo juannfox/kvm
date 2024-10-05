@@ -1,10 +1,14 @@
-import requests
 import logging as log
 import re
+from dataclasses import dataclass
+import requests
+from os import getenv
+
 
 DEFAULT_VERSION_FETCH_URL = "https://cdn.dl.k8s.io/release/stable.txt"
 DEFAULT_OS = "linux"
 DEFAULT_ARCH = "amd64"
+DEFAULT_HTTP_TIMEOUT = 60
 VERSION_REGEX = r"^v\d+\.\d+\.\d+$"
 RELEASE_GET_URL_TEMPLATE = (
     "https://cdn.dl.k8s.io/release/{version}/bin/{os}/{arch}/kubectl"
@@ -13,12 +17,11 @@ RELEASE_GET_URL_TEMPLATE = (
 
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
     log.debug(f"Fetching latest version: GET {provider_url}.")
-    response = requests.get(url=provider_url)
+    response = requests.get(provider_url, timeout=DEFAULT_HTTP_TIMEOUT)
 
     if response.status_code == 200 and response.text is not None:
         version = response.text.strip().lower()
         log.debug(f"Got HTTP response: {version}.")
-        ReleaseSpec.validate_version(version)
     else:
         raise ValueError(
             "Failed to fetch latest version. "
@@ -30,6 +33,7 @@ def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
     return version
 
 
+@dataclass
 class ReleaseSpec:
     os: str
     arch: str
@@ -52,12 +56,9 @@ class ReleaseSpec:
     @staticmethod
     def validate_version(version: str) -> None:
         if re.fullmatch(VERSION_REGEX, version) is None:
-            raise ValueError(
-                "Invalid version format;"
-                f"expected '{VERSION_REGEX}', got '{version}'."
-            )
+            raise ValueError("Invalid version format: {version}.")
         log.debug(
-            f"Version '{version}' is a valid match to regex '{VERSION_REGEX}'."
+            f"Version '{version}' is valid."
             )
 
 
@@ -78,9 +79,19 @@ def generate_release_url(spec: ReleaseSpec) -> str:
         )
 
 
+# Logging options
+LOG_LEVEL = "DEBUG" if getenv("DEBUG") == "1" else "INFO"
+log.basicConfig(level=LOG_LEVEL)
+
 latest_version = fetch_latest_version()
 version_spec = ReleaseSpec(version=latest_version)
 release_get_url = generate_release_url(version_spec)
 
-
-print(release_get_url)
+log.debug(f"Downloading kubectl release from: {release_get_url}.")
+download_response = requests.get(
+        release_get_url, stream=True, timeout=DEFAULT_HTTP_TIMEOUT)
+with open("kubectl", "wb") as f:
+    for chunk in download_response.iter_content(chunk_size=1024):
+        if chunk:
+            f.write(chunk)
+    f.close()

@@ -1,0 +1,17 @@
+[project]
+name = "kvm"
+version = "0.0.1"
+authors = [
+  { name="Juan Fox"},
+]
+description = "KVM is a client to manage kubectl versions."
+readme = "README.md"
+requires-python = ">=3.12.4"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/juannfox/kvm"

@@ -1,6 +1,7 @@
 import logging as log
 import re
 from dataclasses import dataclass
+from typing import Annotated, Optional
 import requests
 from os import getenv
 import typer
@@ -94,9 +95,9 @@ def latest():
     log.info(f"Latest kubectl version: {latest_version}.")
 
 
-@app.command()
-def install(version: str = None):
+def download_kubectl(version: str = None):
     if version is None:
+        log.debug("Version not provided.")
         version = fetch_latest_version()
     version_spec = ReleaseSpec(version=version)
     release_get_url = generate_release_url(version_spec)
@@ -111,6 +112,15 @@ def install(version: str = None):
         f.close()
 
     log.info(f"Downloaded kubectl {version}.")
+
+
+@app.command()
+def download(version: Annotated[Optional[str], typer.Argument()] = None):
+    """
+    Download a kubectl release. If no version is specified, the latest
+    will be downloaded. Version should be in the format 'vX.Y.Z'.
+    """
+    download_kubectl(version)
 
 
 if __name__ == "__main__":

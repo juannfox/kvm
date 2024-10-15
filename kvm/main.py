@@ -2,19 +2,14 @@ import logging as log
 import re
 from dataclasses import dataclass
 from typing import Annotated, Optional
+
 import requests
-from os import getenv
 import typer
 
-
-DEFAULT_VERSION_FETCH_URL = "https://cdn.dl.k8s.io/release/stable.txt"
-DEFAULT_OS = "linux"
-DEFAULT_ARCH = "amd64"
-DEFAULT_HTTP_TIMEOUT = 60
-VERSION_REGEX = r"^v\d+\.\d+\.\d+$"
-RELEASE_GET_URL_TEMPLATE = (
-    "https://cdn.dl.k8s.io/release/{version}/bin/{os}/{arch}/kubectl"
-)
+from kvm.const import (DEFAULT_HTTP_TIMEOUT, DEFAULT_KUBECTL_OUT_FILE,
+                       DEFAULT_VERSION_FETCH_URL, RELEASE_GET_URL_TEMPLATE,
+                       VERSION_REGEX, VERSION_REGEX_MINOR)
+from kvm.utils import detect_platform
 
 
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
@@ -43,7 +38,7 @@ class ReleaseSpec:
     version: str
 
     def __init__(
-            self, version: str, os: str = DEFAULT_OS, arch: str = DEFAULT_ARCH
+            self, version: str, os: str, arch: str
             ):
         self.validate_version(version)
         self.version = version
@@ -56,13 +51,24 @@ class ReleaseSpec:
             f"os = {self.os}, arch = {self.arch})"
         )
 
-    @staticmethod
-    def validate_version(version: str) -> None:
+    def digest_input_version(self, version: str) -> str:
+        if not version.startswith("v"):
+            version = f"v{version}"
+
+        if re.fullmatch(VERSION_REGEX_MINOR, version):
+            # TODO - Detect latest patch of the minor version
+            version = f"{version}.0"
+
+        log.debug(f"Received version '{version}'.")
+        return version
+
+    def validate_version(self, version: str) -> None:
+        version = self.digest_input_version(version)
+
         if re.fullmatch(VERSION_REGEX, version) is None:
-            raise ValueError("Invalid version format: {version}.")
+            raise ValueError(f"Invalid version format: {version}.")
         log.debug(
-            f"Version '{version}' is valid."
-            )
+            f"Version '{version}' is valid.")
 
 
 def generate_release_url(spec: ReleaseSpec) -> str:
@@ -76,38 +82,38 @@ def generate_release_url(spec: ReleaseSpec) -> str:
         log.debug(f"Found release URL: {release_url}.")
         return release_url
     except ValueError as e:
-        raise e(
-            "Failed to generate release URL from "
+        raise ValueError(
+            "Failed to generate release URL fro m "
             f"template {RELEASE_GET_URL_TEMPLATE}."
-        )
+        ) from e
 
 
-def download_kubectl(version: str = None, out_file: str = "kubectl"):
+def download_kubectl(
+        version: str = "", out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
     if version is None:
         log.debug("Version not provided.")
         version = fetch_latest_version()
-    version_spec = ReleaseSpec(version=version)
+
+    platform = detect_platform()
+
+    version_spec = ReleaseSpec(
+        version=version, os=platform[0], arch=platform[1])
     release_get_url = generate_release_url(version_spec)
 
     log.debug(f"Downloading kubectl release from: {release_get_url}.")
     download_response = requests.get(
             release_get_url, stream=True, timeout=DEFAULT_HTTP_TIMEOUT)
     with open(out_file, "wb") as f:
-        for chunk in download_response.iter_content(chunk_size=1024):
+        for chunk in download_response.iter_content(chunk_size=8192):
             if chunk:
                 f.write(chunk)
         f.close()
 
     log.info(f"Downloaded kubectl {version} to {out_file}.")
 
-
 ######################################################################
 
-
-# Logging options
-LOG_LEVEL = "DEBUG" if getenv("DEBUG") == "1" else "INFO"
-log.basicConfig(level=LOG_LEVEL)
 
 app = typer.Typer()
 

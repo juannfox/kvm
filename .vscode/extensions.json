@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "ms-pyright.pyright",
+        "ms-python.flake8",
+        "ms-python.isort",
+        "davidanson.vscode-markdownlint",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy"
+    ]
+}

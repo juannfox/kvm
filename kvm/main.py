@@ -8,7 +8,7 @@ import typer
 
 from kvm.const import (DEFAULT_HTTP_TIMEOUT, DEFAULT_KUBECTL_OUT_FILE,
                        DEFAULT_VERSION_FETCH_URL, RELEASE_GET_URL_TEMPLATE,
-                       VERSION_REGEX, VERSION_REGEX_MINOR)
+                       VERSION_REGEX, VERSION_REGEX_MINOR, LOG_LEVEL)
 from kvm.utils import detect_platform
 
 
@@ -114,6 +114,8 @@ def download_kubectl(
 
 ######################################################################
 
+# Logging options
+log.basicConfig(level=LOG_LEVEL)
 
 app = typer.Typer()
 

@@ -89,12 +89,8 @@ def generate_release_url(spec: ReleaseSpec) -> str:
 
 
 def download_kubectl(
-        version: str = "", out_file: str = DEFAULT_KUBECTL_OUT_FILE):
+        version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
-    if version is None:
-        log.debug("Version not provided.")
-        version = fetch_latest_version()
-
     platform = detect_platform()
 
     version_spec = ReleaseSpec(
@@ -112,9 +108,14 @@ def download_kubectl(
 
     log.info(f"Downloaded kubectl {version} to {out_file}.")
 
+
+def download_kubectl_latest():
+    """Download latest kubectl release to disk."""
+    download_kubectl(fetch_latest_version())
+
 ######################################################################
 
-# Logging options
+
 log.basicConfig(level=LOG_LEVEL)
 
 app = typer.Typer()
@@ -139,7 +140,11 @@ def download(
     Download a kubectl release. If no version is specified, the latest will
     be downloaded; the version should be in the format 'vX.Y.Z'.
     """
-    download_kubectl(version)
+    if version is None:
+        log.debug("Version not provided.")
+        download_kubectl_latest()
+    else:
+        download_kubectl(version)
 
 
 if __name__ == "__main__":

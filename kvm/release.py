@@ -9,9 +9,9 @@ from kvm.const import (VERSION_REGEX, VERSION_REGEX_MINOR)
 @dataclass
 class ReleaseSpec:
     """A release specification for a software."""
+    version: str = field(default_factory=str)
     os: str = field(default_factory=str)
     arch: str = field(default_factory=str)
-    version: str = field(default_factory=str)
 
     def __post_init__(self):
         self.validate_version()
@@ -38,6 +38,9 @@ class ReleaseSpec:
         self.digest_input_version(self.version)
 
         if re.fullmatch(VERSION_REGEX, self.version) is None:
-            raise ValueError(f"Invalid version format: {self.version}.")
+            raise ValueError(
+                f"Invalid version format: '{self.version}', "
+                f"expected '${VERSION_REGEX}'."
+            )
         log.debug(
             f"Version '{self.version}' is valid.")

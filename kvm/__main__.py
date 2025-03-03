@@ -74,11 +74,11 @@ def latest():
     """
     latest_version = fetch_latest_version()
     try:
-        ReleaseSpec(latest_version)
+        ReleaseSpec(version=latest_version)
     except ValueError as e:
         log.error(
             "Failed identifying the latest version: "
-            f"Got '{latest_version}', error: {e}."
+            f"Got '{latest_version}', error: {e}"
         )
         raise e
     log.info(f"Latest kubectl version: {latest_version}.")

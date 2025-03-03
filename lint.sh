@@ -21,7 +21,7 @@ function lint_pylint(){
 }
 
 isort --check "${TARGET}"
-black --check "${TARGET}" --config .black.toml
+black --check "${TARGET}"
 lint_flake8
 lint_pylint
 pyright .

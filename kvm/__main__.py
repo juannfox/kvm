@@ -4,12 +4,15 @@ from typing import Annotated, Optional
 import requests
 import typer
 
-from kvm.const import (DEFAULT_HTTP_TIMEOUT, DEFAULT_KUBECTL_OUT_FILE,
-                       DEFAULT_VERSION_FETCH_URL,
-                       LOG_LEVEL)
-from kvm.utils import detect_platform
-from kvm.release import ReleaseSpec
+from kvm.const import (
+    DEFAULT_HTTP_TIMEOUT,
+    DEFAULT_KUBECTL_OUT_FILE,
+    DEFAULT_VERSION_FETCH_URL,
+    LOG_LEVEL,
+)
 from kvm.provider import OfficialHttpProvider
+from kvm.release import ReleaseSpec
+from kvm.utils import detect_platform
 
 
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
@@ -31,20 +34,18 @@ def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
     return version
 
 
-def download_kubectl(
-        version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
+def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
     platform = detect_platform()
 
-    version_spec = ReleaseSpec(
-        version=version, os=platform[0], arch=platform[1]
-    )
+    version_spec = ReleaseSpec(version=version, os=platform[0], arch=platform[1])
 
     release_get_url = OfficialHttpProvider().generate_release_url(version_spec)
 
     log.debug(f"Downloading kubectl release from: {release_get_url}.")
     download_response = requests.get(
-            release_get_url, stream=True, timeout=DEFAULT_HTTP_TIMEOUT)
+        release_get_url, stream=True, timeout=DEFAULT_HTTP_TIMEOUT
+    )
     with open(out_file, "wb") as f:
         for chunk in download_response.iter_content(chunk_size=8192):
             if chunk:
@@ -57,6 +58,7 @@ def download_kubectl(
 def download_kubectl_latest():
     """Download latest kubectl release to disk."""
     download_kubectl(fetch_latest_version())
+
 
 ######################################################################
 
@@ -86,8 +88,10 @@ def latest():
 
 @app.command()
 def download(
-    version: Annotated[Optional[str],
-                       typer.Argument(envvar="KVM_VERSION_TARGET")] = None):
+    version: Annotated[
+        Optional[str], typer.Argument(envvar="KVM_VERSION_TARGET")
+    ] = None
+):
     """
     Download a kubectl release. If no version is specified, the latest will
     be downloaded; the version should be in the format 'vX.Y.Z'.

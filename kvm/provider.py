@@ -1,9 +1,8 @@
 """Logic for release providers."""
 
 import logging as log
-
-from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 
 from kvm.const import RELEASE_GET_URL_TEMPLATE
 from kvm.release import ReleaseSpec
@@ -47,16 +46,17 @@ class OfficialHttpProvider(HttpProvider):
     def generate_release_url(self, spec: ReleaseSpec) -> str:
         """Generate an HTTP release URL from K8s provider."""
         try:
-            release_url = self.url_template.format(
-                version=spec.version,
-                os=spec.os,
-                arch=spec.arch
-            ).strip().lower()
+            release_url = (
+                self.url_template.format(
+                    version=spec.version, os=spec.os, arch=spec.arch
+                )
+                .strip()
+                .lower()
+            )
 
             log.debug(f"Found release URL: {release_url}.")
             return release_url
         except ValueError as e:
             raise ValueError(
-                "Failed to generate release URL fro m "
-                f"template {self.url_template}."
+                "Failed to generate release URL fro m " f"template {self.url_template}."
             ) from e

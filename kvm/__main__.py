@@ -13,6 +13,7 @@ from kvm.const import (
 from kvm.provider import OfficialHttpProvider
 from kvm.release import ReleaseSpec
 from kvm.utils import detect_platform
+from kvm.__version__ import app_version, app_full_name
 
 
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
@@ -103,6 +104,16 @@ def download(
         download_kubectl_latest()
     else:
         download_kubectl(version)
+
+
+@app.command()
+def version():
+    """
+    Display the current version of KVM.
+    """
+    log.info(
+        f"⚓ {app_full_name} v{app_version} ⚓"
+    )
 
 
 if __name__ == "__main__":

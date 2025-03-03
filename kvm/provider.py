@@ -58,5 +58,6 @@ class OfficialHttpProvider(HttpProvider):
             return release_url
         except ValueError as e:
             raise ValueError(
-                "Failed to generate release URL fro m " f"template {self.url_template}."
+                "Failed to generate release URL from "
+                f"template {self.url_template}."
             ) from e

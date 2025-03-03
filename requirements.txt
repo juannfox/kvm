@@ -1,4 +1,2 @@
 requests==2.32.3
 typer==0.12.5
-# Developer
-pytest==8.3.3

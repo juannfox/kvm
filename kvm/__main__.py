@@ -38,7 +38,9 @@ def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
     platform = detect_platform()
 
-    version_spec = ReleaseSpec(version=version, os=platform[0], arch=platform[1])
+    version_spec = ReleaseSpec(
+        version=version, os=platform[0], arch=platform[1]
+    )
 
     release_get_url = OfficialHttpProvider().generate_release_url(version_spec)
 

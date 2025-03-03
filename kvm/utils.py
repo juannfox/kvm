@@ -1,3 +1,4 @@
+import logging as log
 from platform import uname
 
 from kvm.const import SUPPORTED_ARCHS, SUPPORTED_OSES

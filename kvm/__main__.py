@@ -75,7 +75,13 @@ def download_kubectl_latest():
 ######################################################################
 
 app = typer.Typer(
-    help=f"⚓{app_full_name}: Seamless kubectl version switcher ⚓"
+    help=(
+        f"""
+        :anchor: [bold blue]{app_full_name}[/bold blue]:
+        Seamless [italic]kubectl[/italic] version switcher
+        """
+    ),
+    rich_markup_mode="rich"
 )
 
 
@@ -114,7 +120,7 @@ def version():
     """
     print(
         f"""
-        :anchor: [bold blue]{app_full_name}[/bold blue] {app_version} :anchor:
+        :anchor: [bold blue]{app_full_name}[/bold blue] {app_version}
         """
     )
 

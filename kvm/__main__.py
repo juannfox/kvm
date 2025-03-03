@@ -18,20 +18,32 @@ from kvm.logger import log
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
     """Identify the latest available Kubeclt version."""
     log.debug(f"Fetching latest version: GET {provider_url}.")
-    response = requests.get(provider_url, timeout=DEFAULT_HTTP_TIMEOUT)
+    try:
+        response = requests.get(provider_url, timeout=DEFAULT_HTTP_TIMEOUT)
+        response.raise_for_status()
 
-    if response.status_code == 200 and response.text is not None:
-        version = response.text.strip().lower()
-        log.debug(f"Got HTTP response: {version}.")
-    else:
-        raise ValueError(
+        if response.status_code == 200 and response.text is not None:
+            version = response.text.strip().lower()
+            log.debug(f"Got HTTP response: {version}.")
+            return version
+        else:
+            raise RuntimeError(
+                "Failed to fetch latest version. "
+                f"Status code: {response.status_code}, "
+                "response text: "
+                f"{response.text if response.text is not None else ''}."
+            )
+    except requests.HTTPError as e:
+        raise RuntimeError(
             "Failed to fetch latest version. "
-            f"Status code: {response.status_code}, "
-            "response text: "
-            f"{response.text if response.text is not None else ''}."
-        )
-
-    return version
+            f"HTTP error: {e.response.status_code}."
+        ) from e
+    except requests.ConnectionError as e:
+        raise RuntimeError(
+            "Failed to fetch latest version. Connection error."
+        ) from e
+    except Exception as e:
+        raise RuntimeError("Failed to fetch latest version.") from e
 
 
 def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
@@ -74,14 +86,7 @@ def latest():
     the Kuberentes official site.
     """
     latest_version = fetch_latest_version()
-    try:
-        release = ReleaseSpec(version=latest_version)
-    except ValueError as e:
-        log.error(
-            "Failed identifying the latest version: "
-            f"Got '{latest_version}', error: {e}"
-        )
-        raise e
+    release = ReleaseSpec(version=latest_version)
     print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
 
 
@@ -115,4 +120,7 @@ def version():
 
 
 if __name__ == "__main__":
-    app()
+    try:
+        app()
+    except RuntimeError as e:
+        print(f":warning: [bold red]Error[/bold red]: {e}")

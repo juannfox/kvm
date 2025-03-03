@@ -1,19 +1,18 @@
-import logging as log
 from typing import Annotated, Optional
 
 import requests
 import typer
+from rich import print
 
 from kvm.const import (
     DEFAULT_HTTP_TIMEOUT,
     DEFAULT_KUBECTL_OUT_FILE,
-    DEFAULT_VERSION_FETCH_URL,
-    LOG_LEVEL,
+    DEFAULT_VERSION_FETCH_URL
 )
 from kvm.provider import OfficialHttpProvider
 from kvm.release import ReleaseSpec
-from kvm.utils import detect_platform
 from kvm.__version__ import app_version, app_full_name
+from kvm.logger import log
 
 
 def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
@@ -37,10 +36,8 @@ def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
 
 def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
-    platform = detect_platform()
-
     version_spec = ReleaseSpec(
-        version=version, os=platform[0], arch=platform[1]
+        version=version
     )
 
     release_get_url = OfficialHttpProvider().generate_release_url(version_spec)
@@ -65,10 +62,9 @@ def download_kubectl_latest():
 
 ######################################################################
 
-
-log.basicConfig(level=LOG_LEVEL)
-
-app = typer.Typer()
+app = typer.Typer(
+    help=f"⚓{app_full_name}: Seamless kubectl version switcher ⚓"
+)
 
 
 @app.command()
@@ -79,14 +75,14 @@ def latest():
     """
     latest_version = fetch_latest_version()
     try:
-        ReleaseSpec(version=latest_version)
+        release = ReleaseSpec(version=latest_version)
     except ValueError as e:
         log.error(
             "Failed identifying the latest version: "
             f"Got '{latest_version}', error: {e}"
         )
         raise e
-    log.info(f"Latest kubectl version: {latest_version}.")
+    print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
 
 
 @app.command()
@@ -109,10 +105,12 @@ def download(
 @app.command()
 def version():
     """
-    Display the current version of KVM.
+    Display the current application version.
     """
-    log.info(
-        f"⚓ {app_full_name} v{app_version} ⚓"
+    print(
+        f"""
+        :anchor: [bold blue]{app_full_name}[/bold blue] {app_version} :anchor:
+        """
     )
 
 

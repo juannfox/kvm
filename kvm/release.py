@@ -1,8 +1,9 @@
-import logging as log
 import re
 from dataclasses import dataclass, field
 
 from kvm.const import VERSION_REGEX, VERSION_REGEX_MINOR
+from kvm.utils import detect_platform
+from kvm.logger import log
 
 
 @dataclass
@@ -15,11 +16,15 @@ class ReleaseSpec:
 
     def __post_init__(self):
         self.validate_version()
+        if not self.os or not self.arch:
+            platform = detect_platform()
+            self.os = platform[0]
+            self.arch = platform[1]
 
     def __repr__(self) -> str:
         return (
-            f"ReleaseSpec(version = {self.version},"
-            f"os = {self.os}, arch = {self.arch})"
+            f"ReleaseSpec(version = '{self.version}',"
+            f"os = '{self.os}', arch = '{self.arch}')"
         )
 
     @staticmethod

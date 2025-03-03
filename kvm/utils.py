@@ -1,7 +1,7 @@
-import logging as log
 from platform import uname
 
 from kvm.const import SUPPORTED_ARCHS, SUPPORTED_OSES
+from kvm.logger import log
 
 
 def detect_platform() -> tuple:
@@ -13,6 +13,6 @@ def detect_platform() -> tuple:
     if arch not in SUPPORTED_ARCHS:
         raise ValueError(f"Unsupported architecture: {arch}.")
 
-    log.debug(f"Working on platform {os} {arch}.")
+    log.debug(f"Working on platform '{os} {arch}'.")
 
     return (os, arch)

@@ -1,11 +1,10 @@
 """Logic for release providers."""
-
-import logging as log
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 from kvm.const import RELEASE_GET_URL_TEMPLATE
 from kvm.release import ReleaseSpec
+from kvm.logger import log
 
 
 class Provider(ABC):

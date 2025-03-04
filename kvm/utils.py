@@ -19,7 +19,12 @@ def detect_platform() -> tuple:
     return (os, arch)
 
 
-def http_request(url: str, method: str = "GET", stream: bool = False, check_status: bool = True, timeout: int = DEFAULT_HTTP_TIMEOUT) -> requests.Response:
+def http_request(
+        url: str,
+        method: str = "GET",
+        stream: bool = False,
+        check_status: bool = True,
+        timeout: int = DEFAULT_HTTP_TIMEOUT) -> requests.Response:
     """Make an HTTP request."""
     try:
         response = requests.request(

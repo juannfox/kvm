@@ -5,42 +5,26 @@ import typer
 from rich import print
 
 from kvm.const import (
-    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_KUBECTL_OUT_FILE,
     DEFAULT_VERSION_FETCH_URL
 )
 from kvm.provider import OfficialHttpProvider
 from kvm.release import ReleaseSpec
+from kvm.index import OfficialVersionIndex
 from kvm.__version__ import app_version, app_full_name
 from kvm.logger import log
 
 
-def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
+def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> ReleaseSpec:
     """Identify the latest available Kubeclt version."""
     log.debug(f"Fetching latest version: GET {provider_url}.")
     try:
-        response = requests.get(provider_url, timeout=DEFAULT_HTTP_TIMEOUT)
-        response.raise_for_status()
-
-        if response.status_code == 200 and response.text is not None:
-            version = response.text.strip().lower()
-            log.debug(f"Got HTTP response: {version}.")
-            return version
-        else:
-            raise RuntimeError(
-                "Failed to fetch latest version. "
-                f"Status code: {response.status_code}, "
-                "response text: "
-                f"{response.text if response.text is not None else ''}."
-            )
+        index = OfficialVersionIndex()
+        return index.get()
     except requests.HTTPError as e:
         raise RuntimeError(
             "Failed to fetch latest version. "
             f"HTTP error: {e.response.status_code}."
-        ) from e
-    except requests.ConnectionError as e:
-        raise RuntimeError(
-            "Failed to fetch latest version. Connection error."
         ) from e
     except Exception as e:
         raise RuntimeError("Failed to fetch latest version.") from e
@@ -82,8 +66,7 @@ def latest():
     Identify the latest available Kubeclt version, as per
     the Kuberentes official site.
     """
-    latest_version = fetch_latest_version()
-    release = ReleaseSpec(version=latest_version)
+    release = fetch_latest_version()
     print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
 
 

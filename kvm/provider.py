@@ -6,12 +6,12 @@ from abc import ABC, abstractmethod
 
 from kvm.const import (
     RELEASE_GET_URL_TEMPLATE,
-    DEFAULT_HTTP_TIMEOUT,
     DEFAULT_HTTP_CHUNK_SIZE,
     DEFAULT_KUBECTL_OUT_FILE
 )
 from kvm.release import ReleaseSpec
 from kvm.logger import log
+from kvm.utils import http_request
 
 
 class ProviderError(Error):
@@ -72,13 +72,10 @@ class HttpProvider(Provider, ABC):
         """Request a release over HTTP."""
         try:
             log.debug(f"Fetching release: {spec} with HTTP GET {self.url}.")
-            response = requests.get(
+            return http_request(
                 url=self.url,
-                stream=True,
-                timeout=DEFAULT_HTTP_TIMEOUT
+                stream=True
             )
-            response.raise_for_status()
-            return response
         except requests.HTTPError as e:
             raise ProviderError(
                 "Failed to fetch release over HTTP. Response Status code: "

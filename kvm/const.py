@@ -1,6 +1,6 @@
 from os import getenv
 
-DEFAULT_VERSION_FETCH_URL = "https://ccdn.dl.k8s.io/release/stable.txt"
+DEFAULT_VERSION_FETCH_URL = "https://cdn.dl.k8s.io/release/stable.txt"
 DEFAULT_HTTP_TIMEOUT = 60
 DEFAULT_HTTP_CHUNK_SIZE = 8192
 DEFAULT_KUBECTL_OUT_FILE = "kubectl"

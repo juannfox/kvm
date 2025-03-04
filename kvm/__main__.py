@@ -48,22 +48,13 @@ def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> str:
 
 def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
-    version_spec = ReleaseSpec(
-        version=version
+    provider = OfficialHttpProvider(
+        spec=ReleaseSpec(
+            version=version
+        )
     )
 
-    release_get_url = OfficialHttpProvider().generate_release_url(version_spec)
-
-    log.debug(f"Downloading kubectl release from: {release_get_url}.")
-    download_response = requests.get(
-        release_get_url, stream=True, timeout=DEFAULT_HTTP_TIMEOUT
-    )
-    with open(out_file, "wb") as f:
-        for chunk in download_response.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
-        f.close()
-
+    provider.fetch()
     log.info(f"Downloaded kubectl {version} to {out_file}.")
 
 

@@ -7,7 +7,7 @@ from kvm.const import LOG_LEVEL
 
 # Logger
 logging.basicConfig(
-    level=getenv("LOG_LEVEL", LOG_LEVEL),
+    level=getenv("LOG_LEVEL", LOG_LEVEL).upper(),
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandler()]

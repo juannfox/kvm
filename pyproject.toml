@@ -15,3 +15,16 @@ classifiers = [
 
 [project.urls]
 "Homepage" = "https://github.com/juannfox/kvm"
+
+# https://docs.astral.sh/ruff/configuration/
+
+[tool.ruff]
+line-length = 80
+indent-width = 4
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F"]

@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "No args",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/kvm/__main__.py",
+            "console": "integratedTerminal",
+            "args": []
+        },
+        {
+            "name": "Input command",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/kvm/__main__.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${command:pickArgs}"
+            ]
+        },
+        {
+            "name": "Latest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${cwd}/kvm/__main__.py",
+            "console": "integratedTerminal",
+            "args": [ "latest" ]
+        }
+    ]
+}

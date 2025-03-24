@@ -47,7 +47,7 @@ class HTTPVersionIndex:
                 raise RuntimeError(
                     "Version index retuurned unexpected payload."
                 ) from e
-            except ValueError as e:
+            except ValueError:
                 log.debug(f"Skipping invalid version {tag_name}.")
 
         return versions
@@ -56,6 +56,7 @@ class HTTPVersionIndex:
         """Request a given version over HTTP"""
         versions = self._request_versions()
         try:
+            version = ReleaseSpec(version).version
             return versions.get(version)
         except KeyError:
             raise RuntimeError(f"Version '{version}' not found.")

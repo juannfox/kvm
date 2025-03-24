@@ -6,6 +6,10 @@ from kvm.utils import detect_platform
 from kvm.logger import log
 
 
+class VersionFormatError(Exception):
+    """A version format error."""
+
+
 @dataclass
 class ReleaseSpec:
     """A release specification for a software."""
@@ -42,7 +46,7 @@ class ReleaseSpec:
         self._digest_patch()
 
         if re.fullmatch(VERSION_REGEX, self.version) is None:
-            raise ValueError(
+            raise VersionFormatError(
                 f"Invalid version format: '{self.version}', "
                 f"expected '${VERSION_REGEX}'."
             )

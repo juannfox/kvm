@@ -1,4 +1,6 @@
 from typing import Annotated, Optional
+from types import FunctionType
+from sys import exit
 
 import requests
 import typer
@@ -6,56 +8,37 @@ from rich import print
 
 from kvm.const import (
     DEFAULT_KUBECTL_OUT_FILE,
-    LATEST_VERSION_ENDPOINT_URL
 )
 from kvm.provider import OfficialHttpProvider
-from kvm.release import ReleaseSpec
+from kvm.release import ReleaseSpec, VersionFormatError
 from kvm.index import HTTPVersionIndex
 from kvm.__version__ import app_version, app_full_name
 from kvm.logger import log
 
 
-def fetch_latest_version() -> ReleaseSpec:
-    """Identify the latest available Kubeclt version."""
-    log.debug(f"Fetching latest version.")
-    try:
-        index = HTTPVersionIndex()
-        return index.latest()
-    except requests.HTTPError as e:
-        raise RuntimeError(
-            "Failed to fetch latest version. "
-            f"HTTP error: {e}."
-        ) from e
-    except RuntimeError as e:
-        raise RuntimeError(f"Failed to fetch latest version: {e}") from e
+def railguard_execution(
+        callable: FunctionType,
+        action_description: Optional[str] = None,
+        **kwargs):
+    """Safely execute a callable without breaking app execution."""
+    log.debug(f"Executing '{callable}({kwargs})'.")
+    action_description = action_description or f"executing {callable.__name__}"
 
-def list_versions() -> ReleaseSpec:
-    """List the available Kubeclt version."""
-    log.debug(f"Fetching version list.")
     try:
-        index = HTTPVersionIndex()
-        return index.list()
+        return callable(**kwargs)
     except requests.HTTPError as e:
-        raise RuntimeError(
-            "Failed to fetch version list. "
-            f"HTTP error: {e}."
-        ) from e
-    except RuntimeError as e:
-        raise RuntimeError(f"Failed to fetch version list: {e}") from e
-
-def check_version(version: str) -> ReleaseSpec:
-    """Check if Kubeclt version exists."""
-    log.debug(f"Validating version.")
-    try:
-        index = HTTPVersionIndex()
-        return index.get(version)
-    except requests.HTTPError as e:
-        raise RuntimeError(
-            "Failed to validate version. "
-            f"HTTP error: {e}."
-        ) from e
-    except RuntimeError as e:
-        raise RuntimeError(f"Failed to validate version: {e}") from e
+        log.error(
+            f"HTTP error {action_description}: {e}"
+        )
+    except VersionFormatError as e:
+        log.error(
+            f"Version error {action_description}: {e}"
+        )
+    except Exception as e:
+        log.error(
+            f"Runtime error {action_description}: {e}"
+        )
+    exit(1)
 
 
 def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
@@ -72,7 +55,7 @@ def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
 
 def download_kubectl_latest():
     """Download latest kubectl release to disk."""
-    download_kubectl(fetch_latest_version())
+    download_kubectl(railguard_execution())
 
 
 ######################################################################
@@ -93,29 +76,41 @@ def latest():
     """
     Identify the latest available Kubeclt version.
     """
-    release = fetch_latest_version()
+    release = railguard_execution(
+        callable=HTTPVersionIndex().latest,
+        action_description="fetching latest version"
+    )
     print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
 
 
 @app.command()
 def list():
     """
-    Identify the available Kubeclt versions.
+    List the available Kubeclt versions.
     """
-    releases = list_versions()
+    releases = railguard_execution(
+        callable=HTTPVersionIndex().list,
+        action_description="listing available versions"
+    )
     releases = [r.version for r in releases]
+    releases.sort(reverse=True)
     print(f"Available [italic]kubectl[/italic] versions: {releases}.")
+
 
 @app.command()
 def check(version: str):
     """
     Check if a Kubeclt version exists.
     """
-    release = check_version(version)
+    release = railguard_execution(
+        callable=HTTPVersionIndex().get,
+        action_description=f"checking version {version}",
+        version=version
+    )
     if release:
-        print(f"[italic]kubectl[/italic] version '{release}' exists.")
+        print(f"[italic]kubectl[/italic] version '{release.version}' exists.")
     else:
-        print(f":warning: Version '{release} was not found.'")
+        print(f":warning: Version '{version} was not found.'")
 
 
 @app.command()

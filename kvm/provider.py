@@ -3,6 +3,7 @@ from csv import Error
 import requests
 
 from abc import ABC, abstractmethod
+import os
 
 from kvm.const import (
     RELEASE_GET_URL_TEMPLATE,
@@ -68,6 +69,18 @@ class HttpProvider(Provider, ABC):
                 "Failed to write HTTP response stream to file"
             ) from e
 
+    def add_executable_permissions(self, file: str):
+        """Add executable permissions to a file."""
+        if os.name == "posix":
+            try:
+                stat = os.stat(file)
+                os.chmod(file, stat.st_mode | 0o111)
+            except OSError as e:
+                raise ProviderError(
+                    f"Failed to add executable permissions to file '{file}':"
+                    f" {e}"
+                )
+
     def request_release(self, spec: ReleaseSpec) -> requests.Response:
         """Request a release over HTTP."""
         try:
@@ -88,6 +101,7 @@ class HttpProvider(Provider, ABC):
         """Fetch a software release over HTTP."""
         response = self.request_release(self.spec)
         self.write_stream_to_file(response, out_file)
+        self.add_executable_permissions(out_file)
 
 
 class OfficialHttpProvider(HttpProvider):
@@ -97,10 +111,11 @@ class OfficialHttpProvider(HttpProvider):
 
     def __init__(
         self,
-        spec: ReleaseSpec,
+        version: str,
         url_template: str = RELEASE_GET_URL_TEMPLATE
     ):
         self.url_template = url_template
+        spec = ReleaseSpec(version)
         super().__init__(spec)
 
     def generate_release_url(self, spec: ReleaseSpec) -> str:

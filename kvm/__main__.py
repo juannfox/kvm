@@ -5,6 +5,7 @@ from sys import exit, argv
 import requests
 import typer
 from rich import print
+from rich.status import Status
 
 from kvm.const import (
     DEFAULT_KUBECTL_OUT_FILE,
@@ -25,7 +26,8 @@ def railguard_execution(
     action_description = action_description or f"executing {callable.__name__}"
 
     try:
-        return callable(**kwargs)
+        with Status(f"{action_description.capitalize()}..."):
+            return callable(**kwargs)
     except requests.HTTPError as e:
         log.error(
             f"HTTP error {action_description}: {e}"
@@ -118,7 +120,6 @@ def download(
     Download a kubectl release. If no version is specified, the latest will
     be downloaded; the version should be in the format 'vX.Y.Z'.
     """
-    # Find latest version if not specified
     if not version:
         release = railguard_execution(
             callable=HTTPVersionIndex().latest,
@@ -126,7 +127,6 @@ def download(
         )
         version = release.version
 
-    # Download the release
     railguard_execution(
         callable=HttpProvider().fetch,
         action_description="downloading latest version",

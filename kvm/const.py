@@ -4,6 +4,7 @@ from os import getenv
 DEFAULT_HTTP_TIMEOUT = 60
 DEFAULT_HTTP_CHUNK_SIZE = 8192
 DEFAULT_KUBECTL_OUT_FILE = "./kubectl"
+DEFAULT_ENCODING = "utf-8"
 SUPPORTED_OSES = ["darwin", "linux", "windows"]
 SUPPORTED_ARCHS = ["x86_64", "arm64"]
 VERSION_REGEX = r"^v\d+\.\d+\.\d+$"  # e.g. 'v1.29.3'

@@ -6,29 +6,42 @@ from rich import print
 
 from kvm.const import (
     DEFAULT_KUBECTL_OUT_FILE,
-    DEFAULT_VERSION_FETCH_URL
+    LATEST_VERSION_ENDPOINT_URL
 )
 from kvm.provider import OfficialHttpProvider
 from kvm.release import ReleaseSpec
-from kvm.index import OfficialVersionIndex
+from kvm.index import HTTPVersionIndex
 from kvm.__version__ import app_version, app_full_name
 from kvm.logger import log
 
 
-def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> ReleaseSpec:
+def fetch_latest_version() -> ReleaseSpec:
     """Identify the latest available Kubeclt version."""
-    log.debug(f"Fetching latest version: GET {provider_url}.")
+    log.debug(f"Fetching latest version.")
     try:
-        index = OfficialVersionIndex()
-        return index.get()
+        index = HTTPVersionIndex()
+        return index.latest()
     except requests.HTTPError as e:
         raise RuntimeError(
             "Failed to fetch latest version. "
-            f"HTTP error: {e.response.status_code}."
+            f"HTTP error: {e}."
         ) from e
-    except Exception as e:
-        raise RuntimeError("Failed to fetch latest version.") from e
+    except RuntimeError as e:
+        raise RuntimeError(f"Failed to fetch latest version: {e}") from e
 
+def list_versions() -> ReleaseSpec:
+    """List the available Kubeclt version."""
+    log.debug(f"Fetching version list.")
+    try:
+        index = HTTPVersionIndex()
+        return index.list()
+    except requests.HTTPError as e:
+        raise RuntimeError(
+            "Failed to fetch latest version. "
+            f"HTTP error: {e}."
+        ) from e
+    except RuntimeError as e:
+        raise RuntimeError(f"Failed to fetch latest version: {e}") from e
 
 def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
@@ -68,6 +81,18 @@ def latest():
     """
     release = fetch_latest_version()
     print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
+
+
+@app.command()
+def list():
+    """
+    Identify the available Kubeclt versiosn, as per
+    the Kuberentes official site.
+    """
+    releases = list_versions()
+    releases = [r.version for r in releases]
+    print(f"Available [italic]kubectl[/italic] versions: {releases}.")
+
 
 
 @app.command()

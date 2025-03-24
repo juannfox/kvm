@@ -132,8 +132,9 @@ def download(
         action_description=f"downloading version {version}",
         version=version
     )
-    log.info(
-        f"Downloaded kubectl '{version}' to {DEFAULT_KUBECTL_OUT_FILE}."
+    print(
+        f":white_heavy_check_mark: Downloaded [italic]kubectl[/italic] "
+        f"'{version}' as '{DEFAULT_KUBECTL_OUT_FILE}'."
     )
 
 

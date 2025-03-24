@@ -1,6 +1,6 @@
 """Software version index classes"""
 import requests
-from  dataclasses import dataclass, field
+from dataclasses import dataclass, field
 
 from kvm.const import LATEST_VERSION_ENDPOINT_URL, VERSION_INDEX_URL
 from kvm.release import ReleaseSpec
@@ -35,9 +35,9 @@ class HTTPVersionIndex:
         response = http_request(
             self.index_url
         )
-        payload = response.json() # Format [{...tag_name...}, ...]
+        payload = response.json()  # Format [{...tag_name...}, ...]
 
-        versions = {} # Format {'v1.29.0': {ReleaseSpec()}, ...}
+        versions = {}  # Format {'v1.29.0': {ReleaseSpec()}, ...}
         for release in payload:
             try:
                 tag_name = release["tag_name"]

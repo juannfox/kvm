@@ -1,6 +1,6 @@
 from typing import Annotated, Optional
 from types import FunctionType
-from sys import exit
+from sys import exit, argv
 
 import requests
 import typer
@@ -20,7 +20,7 @@ def railguard_execution(
         callable: FunctionType,
         action_description: Optional[str] = None,
         **kwargs):
-    """Safely execute a callable without breaking app execution."""
+    """Safely execute a callable and break app execution."""
     log.debug(f"Executing '{callable}({kwargs})'.")
     action_description = action_description or f"executing {callable.__name__}"
 
@@ -69,6 +69,16 @@ app = typer.Typer(
     ),
     rich_markup_mode="rich"
 )
+
+
+@app.callback()
+def main(ctx: typer.Context):
+    """Init for Typer app"""
+    log.debug(
+        "Starting Typer app's "
+        f"subcommand '{ctx.invoked_subcommand}'"
+    )
+    log.debug(f" User executed: {argv}.")
 
 
 @app.command()

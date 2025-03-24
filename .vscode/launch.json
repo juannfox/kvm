@@ -8,7 +8,7 @@
             "name": "No args",
             "type": "debugpy",
             "request": "launch",
-            "program": "${cwd}/kvm/__main__.py",
+            "program": "kvm",
             "console": "integratedTerminal",
             "args": []
         },
@@ -16,7 +16,7 @@
             "name": "Input command",
             "type": "debugpy",
             "request": "launch",
-            "program": "${cwd}/kvm/__main__.py",
+            "program": "kvm",
             "console": "integratedTerminal",
             "args": [
                 "${command:pickArgs}"

@@ -9,7 +9,7 @@ from rich import print
 from kvm.const import (
     DEFAULT_KUBECTL_OUT_FILE,
 )
-from kvm.provider import OfficialHttpProvider
+from kvm.provider import HttpProvider
 from kvm.release import VersionFormatError
 from kvm.index import HTTPVersionIndex
 from kvm.__version__ import app_version, app_full_name
@@ -122,14 +122,15 @@ def download(
     if not version:
         release = railguard_execution(
             callable=HTTPVersionIndex().latest,
-            action_description="Identifying latest version"
+            action_description="identifying latest version"
         )
         version = release.version
 
     # Download the release
     railguard_execution(
-        callable=OfficialHttpProvider(version).fetch,
-        action_description="fetching latest version"
+        callable=HttpProvider().fetch,
+        action_description="downloading latest version",
+        version=version
     )
     log.info(
         f"Downloaded kubectl '{version}' to {DEFAULT_KUBECTL_OUT_FILE}."

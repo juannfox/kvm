@@ -3,7 +3,7 @@ import requests
 from dataclasses import dataclass, field
 
 from kvm.const import LATEST_VERSION_ENDPOINT_URL, VERSION_INDEX_URL
-from kvm.release import ReleaseSpec
+from kvm.release import ReleaseSpec, VersionFormatError
 from kvm.utils import http_request
 from kvm.logger import log
 
@@ -45,9 +45,9 @@ class HTTPVersionIndex:
                 versions[release.version] = release
             except KeyError as e:
                 raise RuntimeError(
-                    "Version index retuurned unexpected payload."
+                    "Version index returned unexpected payload."
                 ) from e
-            except ValueError:
+            except VersionFormatError:
                 log.debug(f"Skipping invalid version {tag_name}.")
 
         return versions

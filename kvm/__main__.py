@@ -1,53 +1,49 @@
 from typing import Annotated, Optional
+from types import FunctionType
+from sys import exit, argv
 
 import requests
 import typer
 from rich import print
+from rich.status import Status
 
 from kvm.const import (
     DEFAULT_KUBECTL_OUT_FILE,
-    DEFAULT_VERSION_FETCH_URL
 )
-from kvm.provider import OfficialHttpProvider
-from kvm.release import ReleaseSpec
-from kvm.index import OfficialVersionIndex
+from kvm.provider import HttpProvider
+from kvm.release import VersionFormatError
+from kvm.index import HTTPVersionIndex
 from kvm.__version__ import app_version, app_full_name
 from kvm.logger import log
 
 
-def fetch_latest_version(provider_url: str = DEFAULT_VERSION_FETCH_URL) -> ReleaseSpec:
-    """Identify the latest available Kubeclt version."""
-    log.debug(f"Fetching latest version: GET {provider_url}.")
+def railguard_execution(
+        callable: FunctionType,
+        action_description: Optional[str] = None,
+        **kwargs):
+    """Safely execute a callable and break app execution."""
+    log.debug(f"Executing '{callable}({kwargs})'.")
+    action_description = action_description or f"executing {callable.__name__}"
+
     try:
-        index = OfficialVersionIndex()
-        return index.get()
+        with Status(f":hourglass: {action_description.capitalize()}..."):
+            return callable(**kwargs)
     except requests.HTTPError as e:
-        raise RuntimeError(
-            "Failed to fetch latest version. "
-            f"HTTP error: {e.response.status_code}."
-        ) from e
-    except Exception as e:
-        raise RuntimeError("Failed to fetch latest version.") from e
-
-
-def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
-    """Download a kubectl release to disk."""
-    provider = OfficialHttpProvider(
-        spec=ReleaseSpec(
-            version=version
+        log.error(
+            f"HTTP error {action_description}: {e}"
         )
-    )
-
-    provider.fetch()
-    log.info(f"Downloaded kubectl {version} to {out_file}.")
-
-
-def download_kubectl_latest():
-    """Download latest kubectl release to disk."""
-    download_kubectl(fetch_latest_version())
-
+    except VersionFormatError as e:
+        log.error(
+            f"Version error {action_description}: {e}"
+        )
+    except Exception as e:
+        log.error(
+            f"Runtime error {action_description}: {e}"
+        )
+    exit(1)
 
 ######################################################################
+
 
 app = typer.Typer(
     help=(
@@ -56,18 +52,62 @@ app = typer.Typer(
         Seamless [italic]kubectl[/italic] version switcher
         """
     ),
-    rich_markup_mode="rich"
+    rich_markup_mode="rich",
+    no_args_is_help=True
 )
+
+
+@app.callback()
+def main(ctx: typer.Context):
+    """Init for Typer app"""
+    log.debug(
+        "Starting Typer app's "
+        f"subcommand '{ctx.invoked_subcommand}'"
+    )
+    log.debug(f" User executed: {argv}.")
 
 
 @app.command()
 def latest():
     """
-    Identify the latest available Kubeclt version, as per
-    the Kuberentes official site.
+    Identify the latest available Kubeclt version.
     """
-    release = fetch_latest_version()
+    release = railguard_execution(
+        callable=HTTPVersionIndex().latest,
+        action_description="Identifying latest version"
+    )
     print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
+
+
+@app.command()
+def list():
+    """
+    List the available Kubeclt versions.
+    """
+    releases = railguard_execution(
+        callable=HTTPVersionIndex().list,
+        action_description="listing available versions"
+    )
+    releases = [r.version for r in releases]
+    releases.sort(reverse=True)
+    print(f"Available [italic]kubectl[/italic] versions: {releases}.")
+
+
+@app.command()
+def check(version: str):
+    """
+    Check if a Kubeclt version exists; the version should be in the format:
+     'vX.Y.Z'.
+    """
+    release = railguard_execution(
+        callable=HTTPVersionIndex().get,
+        action_description=f"checking version {version}",
+        version=version
+    )
+    if release:
+        print(f"[italic]kubectl[/italic] version '{release.version}' exists.")
+    else:
+        print(f":warning: Version '{version} was not found.'")
 
 
 @app.command()
@@ -80,11 +120,21 @@ def download(
     Download a kubectl release. If no version is specified, the latest will
     be downloaded; the version should be in the format 'vX.Y.Z'.
     """
-    if version is None:
-        log.debug("Version not provided.")
-        download_kubectl_latest()
-    else:
-        download_kubectl(version)
+    if not version:
+        release = railguard_execution(
+            callable=HTTPVersionIndex().latest,
+            action_description="identifying latest version"
+        )
+        version = release.version
+
+    railguard_execution(
+        callable=HttpProvider().fetch,
+        action_description=f"downloading version {version}",
+        version=version
+    )
+    log.info(
+        f"Downloaded kubectl '{version}' to {DEFAULT_KUBECTL_OUT_FILE}."
+    )
 
 
 @app.command()

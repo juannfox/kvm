@@ -26,7 +26,7 @@ def railguard_execution(
     action_description = action_description or f"executing {callable.__name__}"
 
     try:
-        with Status(f"{action_description.capitalize()}..."):
+        with Status(f":hourglass: {action_description.capitalize()}..."):
             return callable(**kwargs)
     except requests.HTTPError as e:
         log.error(

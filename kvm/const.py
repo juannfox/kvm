@@ -7,7 +7,7 @@ DEFAULT_KUBECTL_OUT_FILE = "kubectl"
 SUPPORTED_OSES = ["darwin", "linux", "windows"]
 SUPPORTED_ARCHS = ["x86_64", "arm64"]
 VERSION_REGEX = r"^v\d+\.\d+\.\d+$"  # e.g. 'v1.29.3'
-VERSION_REGEX_MINOR = r"^v\d+\.\d+$"  # e.g 'v1.29'
+VERSION_REGEX_MINOR = r"^v?\d+\.\d+$"  # e.g 'v1.29'
 LOG_LEVEL = "DEBUG" if getenv("DEBUG") == "1" else "INFO"
 
 # region URLs

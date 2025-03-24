@@ -1,8 +1,12 @@
 """Software version index classes"""
 import requests
+import re
+
 from dataclasses import dataclass, field
 
-from kvm.const import LATEST_VERSION_ENDPOINT_URL, VERSION_INDEX_URL
+from kvm.const import (
+    LATEST_VERSION_ENDPOINT_URL, VERSION_INDEX_URL, VERSION_REGEX_MINOR
+)
 from kvm.release import ReleaseSpec, VersionFormatError
 from kvm.utils import http_request
 from kvm.logger import log
@@ -16,10 +20,6 @@ class HTTPVersionIndex:
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(index_url = '{self.index_url}')"
-
-    def _digest_version(self, response: requests.Response) -> ReleaseSpec:
-        """Process a version string and return a Release spec."""
-        return ReleaseSpec(response.text.strip().lower())
 
     def _request_latest(self,) -> requests.Response:
         """Request the latest version of a software."""
@@ -48,21 +48,40 @@ class HTTPVersionIndex:
                     "Version index returned unexpected payload."
                 ) from e
             except VersionFormatError:
-                log.debug(f"Skipping invalid version {tag_name}.")
+                pass
 
-        return versions
+        log.debug(f"Found {len(versions)} versions.")
+        return dict(sorted(versions.items(), reverse=True))
 
     def _request_version(self, version: str) -> ReleaseSpec:
         """Request a given version over HTTP"""
         versions = self._request_versions()
+
         try:
             version = ReleaseSpec(version).version
             return versions.get(version)
         except KeyError:
             raise RuntimeError(f"Version '{version}' not found.")
 
+    def _request_minor_version(self, version: str) -> ReleaseSpec:
+        """Request a given minor version's latest patch over HTTP"""
+        versions = self._request_versions()  # Already sorted
+
+        for k, v in versions.items():
+            if k.replace("v", "").startswith(version.replace("v", "")):
+                return v  # Latest patch version ensured by dict order
+
+        # Otherwise
+        raise RuntimeError(f"Version '{version}' not found.")
+
     def get(self, version: str) -> ReleaseSpec:
         """Identify the latest version of a software."""
+        if re.fullmatch(VERSION_REGEX_MINOR, version):
+            log.debug(
+                f"Identifying latest patch for minor version '{version}'."
+            )
+            return self._request_minor_version(version)
+
         return self._request_version(version)
 
     def list(self) -> list[ReleaseSpec]:

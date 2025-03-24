@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 
-from kvm.const import VERSION_REGEX, VERSION_REGEX_MINOR
+from kvm.const import VERSION_REGEX
 from kvm.utils import detect_platform
 from kvm.logger import log
 
@@ -35,15 +35,8 @@ class ReleaseSpec:
         if not self.version.startswith("v"):
             self.version = f"v{self.version}"
 
-    def _digest_patch(self) -> str:
-        """Validate and ammend the patch on a semver version string"""
-        if re.fullmatch(VERSION_REGEX_MINOR, self.version):
-            # TODO - Fetch (online) latest patch of the minor version
-            return f"{self.version}.0"
-
     def _validate_version(self) -> None:
         self._digest_prefix()
-        self._digest_patch()
 
         if re.fullmatch(VERSION_REGEX, self.version) is None:
             raise VersionFormatError(

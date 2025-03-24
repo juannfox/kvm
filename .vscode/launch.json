@@ -10,6 +10,7 @@
             "request": "launch",
             "program": "kvm",
             "console": "integratedTerminal",
+            "env": {"PYTHONPATH": "${workspaceRoot}"},
             "args": []
         },
         {
@@ -18,6 +19,7 @@
             "request": "launch",
             "program": "kvm",
             "console": "integratedTerminal",
+            "env": {"PYTHONPATH": "${workspaceRoot}"},
             "args": [
                 "${command:pickArgs}"
             ]
@@ -26,9 +28,31 @@
             "name": "Latest",
             "type": "debugpy",
             "request": "launch",
-            "program": "${cwd}/kvm/__main__.py",
+            "program": "kvm",
             "console": "integratedTerminal",
+            "env": {"PYTHONPATH": "${workspaceRoot}"},
             "args": [ "latest" ]
+        },
+        {
+            "name": "Download latest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "kvm",
+            "console": "integratedTerminal",
+            "env": {"PYTHONPATH": "${workspaceRoot}"},
+            "args": [ "download" ]
+        },
+        {
+            "name": "Download specific version",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "kvm",
+            "console": "integratedTerminal",
+            "env": {"PYTHONPATH": "${workspaceRoot}"},
+            "args": [
+                "download",
+                "${command:pickArgs}"
+            ]
         }
     ]
 }

@@ -129,7 +129,7 @@ def download(
 
     railguard_execution(
         callable=HttpProvider().fetch,
-        action_description="downloading latest version",
+        action_description=f"downloading version {version}",
         version=version
     )
     log.info(

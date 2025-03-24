@@ -37,11 +37,26 @@ def list_versions() -> ReleaseSpec:
         return index.list()
     except requests.HTTPError as e:
         raise RuntimeError(
-            "Failed to fetch latest version. "
+            "Failed to fetch version list. "
             f"HTTP error: {e}."
         ) from e
     except RuntimeError as e:
-        raise RuntimeError(f"Failed to fetch latest version: {e}") from e
+        raise RuntimeError(f"Failed to fetch version list: {e}") from e
+
+def check_version(version: str) -> ReleaseSpec:
+    """Check if Kubeclt version exists."""
+    log.debug(f"Validating version.")
+    try:
+        index = HTTPVersionIndex()
+        return index.get(version)
+    except requests.HTTPError as e:
+        raise RuntimeError(
+            "Failed to validate version. "
+            f"HTTP error: {e}."
+        ) from e
+    except RuntimeError as e:
+        raise RuntimeError(f"Failed to validate version: {e}") from e
+
 
 def download_kubectl(version: str, out_file: str = DEFAULT_KUBECTL_OUT_FILE):
     """Download a kubectl release to disk."""
@@ -76,8 +91,7 @@ app = typer.Typer(
 @app.command()
 def latest():
     """
-    Identify the latest available Kubeclt version, as per
-    the Kuberentes official site.
+    Identify the latest available Kubeclt version.
     """
     release = fetch_latest_version()
     print(f"Latest [italic]kubectl[/italic] version: '{release.version}'.")
@@ -86,13 +100,22 @@ def latest():
 @app.command()
 def list():
     """
-    Identify the available Kubeclt versiosn, as per
-    the Kuberentes official site.
+    Identify the available Kubeclt versions.
     """
     releases = list_versions()
     releases = [r.version for r in releases]
     print(f"Available [italic]kubectl[/italic] versions: {releases}.")
 
+@app.command()
+def check(version: str):
+    """
+    Check if a Kubeclt version exists.
+    """
+    release = check_version(version)
+    if release:
+        print(f"[italic]kubectl[/italic] version '{release}' exists.")
+    else:
+        print(f":warning: Version '{release} was not found.'")
 
 
 @app.command()

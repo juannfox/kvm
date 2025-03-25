@@ -10,6 +10,18 @@ KVM_VERSION_REGEX = r"\d+\.\d+\.\d+"
 class TestApp(unittest.TestCase):
     """Test the Typer application layer"""
 
+    @staticmethod
+    def run_typer_command(subcommand: str):
+        """Run a process and return its stdout pipe"""
+        process = subprocess.Popen(
+            args=["python3", "-m", "kvm", subcommand],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        output, _ = process.communicate()
+        return output.decode(DEFAULT_ENCODING).replace("\n", "")
+
     def test_package_version(self):
         """Validate that the package version is up to date"""
         with open("pyproject.toml", "r", encoding=DEFAULT_ENCODING) as f:
@@ -38,17 +50,12 @@ class TestApp(unittest.TestCase):
             msg="Version mismatch between Pyproject.toml and __version__.py."
         )
 
-    # def test_print_version(self):
-    #     """Test that the typer app prints the version"""
-    #     process = subprocess.Popen(
-    #         args=["python3", "-m", "kvm", "version"],
-    #         stdout=subprocess.PIPE,
-    #         stderr=subprocess.PIPE,
-    #     )
+    def test_print_version(self):
+        """Test that the typer app prints the version"""
+        output = self.run_typer_command("version")
 
-    #     stdout, _ = process.communicate()
-    #     output = stdout.decode(DEFAULT_ENCODING)
-    #     self.assertIsInstance(
-    #         re.match(fr".+({KVM_VERSION_REGEX}).+", output).groups()[0],
-    #         str
-    #     )
+        match = re.match(fr".*({KVM_VERSION_REGEX}).*", output)
+        self.assertIsInstance(
+            match.groups()[0],
+            str
+        )

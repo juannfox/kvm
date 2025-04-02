@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 from requests import RequestException
 
-from kvm.index import HTTPVersionIndex, VersionFormatError
+from kvm.index import HTTPVersionIndex, VersionFormatError, ReleaseSpec
 
 KVM_VERSION_REGEX = r"\d+\.\d+\.\d+"
 
@@ -38,6 +38,7 @@ class TestIndex(unittest.TestCase):
 
     def test_latest(self):
         """Test that the app can find the latest kubectl version"""
+        # Positive space
         with patch("requests.request") as mock:
             mock.return_value = MockResponse(
                 text="v1.29.0",
@@ -47,6 +48,7 @@ class TestIndex(unittest.TestCase):
                 "v1.29.0"
             )
 
+        # Negative space
         with patch("requests.request") as mock:
             mock.return_value = MockResponse(
                 text="g1BBerish",
@@ -61,3 +63,45 @@ class TestIndex(unittest.TestCase):
             )
             with self.assertRaises(RequestException):
                 self.index.latest().version
+
+    def test_list(self):
+        """Test that the index can list versions"""
+        # Positive space
+        with patch("requests.request") as mock:
+            mock.return_value = MockResponse(
+                text="",
+                json_response=[
+                    {
+                        "tag_name": "v1.29.0",
+                        "author": "nottrue"
+                    },
+                    {
+                        "tag_name": "v1.28.2",
+                        "other_key": "other_value"
+                    },
+                ]
+            )
+            self.assertEqual(
+                self.index.list(),
+                [ReleaseSpec("v1.29.0"), ReleaseSpec("v1.28.2")]
+            )
+
+        # Negative space
+        with patch("requests.request") as mock:
+            mock.return_value = MockResponse(
+                text="",
+                json_response={
+                    "fake": "value",
+                    "other": "values"
+                },
+            )
+            with self.assertRaises(RuntimeError):
+                self.index.list(),
+
+        with patch("requests.request") as mock:
+            mock.return_value = MockResponse(
+                text="",
+                status_code=401
+            )
+            with self.assertRaises(RequestException):
+                self.index.list()

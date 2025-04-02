@@ -31,7 +31,15 @@ class HTTPVersionIndex:
         return self._request_latest()
 
     def _request_versions(self) -> ReleaseSpec:
-        """Request a given version over HTTP"""
+        """
+        Request a given version over HTTP
+
+        Returns: A dictionary of versions, sorted by version number.
+
+        Raises:
+            RuntimeError: If the version index returns an unexpected payload.
+            VersionFormatError: If the version format is invalid.
+        """
         response = http_request(
             self.index_url
         )
@@ -40,9 +48,14 @@ class HTTPVersionIndex:
         versions = {}  # Format {'v1.29.0': {ReleaseSpec()}, ...}
         for release in payload:
             try:
-                tag_name = release["tag_name"]
-                release = ReleaseSpec(tag_name.strip().lower())
-                versions[release.version] = release
+                if isinstance(release, dict):
+                    tag_name = release["tag_name"]
+                    release = ReleaseSpec(tag_name.strip().lower())
+                    versions[release.version] = release
+                else:
+                    raise RuntimeError(
+                        "Version index returned invalid formatted payload."
+                    )
             except KeyError as e:
                 raise RuntimeError(
                     "Version index returned unexpected payload."

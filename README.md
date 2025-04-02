@@ -22,3 +22,9 @@ python3 -m kvm download
 ```
 
 ![KVM usage example](./img/kvm-example.png)
+
+### TODOs
+
+1. Add installation to $PATH.
+2. Build with Pyinstaller as executable.
+3. Distribute over Pip.

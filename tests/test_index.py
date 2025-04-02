@@ -3,7 +3,9 @@ import unittest
 from unittest.mock import patch
 from requests import RequestException
 
-from kvm.index import HTTPVersionIndex, VersionFormatError, ReleaseSpec
+from kvm.index import (
+    HTTPVersionIndex, VersionFormatError, ReleaseSpec, IndexError
+)
 
 KVM_VERSION_REGEX = r"\d+\.\d+\.\d+"
 
@@ -79,6 +81,13 @@ class TestIndex(unittest.TestCase):
                         "tag_name": "v1.28.2",
                         "other_key": "other_value"
                     },
+                    {
+                        "tag_name": "v1.25",
+                    },
+                    {
+                        "tag_name": "v1",
+                        "willBe": "skipped"
+                    },
                 ]
             )
             self.assertEqual(
@@ -91,11 +100,28 @@ class TestIndex(unittest.TestCase):
             mock.return_value = MockResponse(
                 text="",
                 json_response={
-                    "fake": "value",
-                    "other": "values"
+                    "not": "a",
+                    "list": "ofDicts"
                 },
             )
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(IndexError):
+                self.index.list(),
+
+        with patch("requests.request") as mock:
+            mock.return_value = MockResponse(
+                text="",
+                json_response=[
+                    {
+                        "tag_name": "v1.25.0",
+                        "author": "jdoe"
+                    },
+                    {
+                        "missing": "tag_name",
+                        "author": "badman"
+                    }
+                ],
+            )
+            with self.assertRaises(IndexError):
                 self.index.list(),
 
         with patch("requests.request") as mock:

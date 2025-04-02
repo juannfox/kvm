@@ -12,6 +12,11 @@ from kvm.utils import http_request
 from kvm.logger import log
 
 
+class IndexError(Exception):
+    """Base class for HTTP Index errors"""
+    pass
+
+
 @dataclass
 class HTTPVersionIndex:
     """A software version index."""
@@ -32,13 +37,13 @@ class HTTPVersionIndex:
 
     def _request_versions(self) -> ReleaseSpec:
         """
-        Request a given version over HTTP
+        Request all versions over HTTP
 
         Returns: A dictionary of versions, sorted by version number.
 
         Raises:
-            RuntimeError: If the version index returns an unexpected payload.
-            VersionFormatError: If the version format is invalid.
+            IndexError: If the version index returns an unexpected payload.
+            RequestException: If the HTTP request fails.
         """
         response = http_request(
             self.index_url
@@ -53,14 +58,17 @@ class HTTPVersionIndex:
                     release = ReleaseSpec(tag_name.strip().lower())
                     versions[release.version] = release
                 else:
-                    raise RuntimeError(
+                    raise IndexError(
                         "Version index returned invalid formatted payload."
                     )
             except KeyError as e:
-                raise RuntimeError(
+                raise IndexError(
                     "Version index returned unexpected payload."
                 ) from e
             except VersionFormatError:
+                log.debug(
+                    f"Skipping invalid version: {tag_name}."
+                )
                 pass
 
         log.debug(f"Found {len(versions)} versions.")
@@ -98,6 +106,14 @@ class HTTPVersionIndex:
         return self._request_version(version)
 
     def list(self) -> list[ReleaseSpec]:
-        """Identify the latest version of a software."""
+        """
+        List all the available versions.
+
+        Returns: A list of releases, sorted by version number.
+
+        Raises:
+            IndexError: If the version index returns an unexpected payload.
+            RequestException: If the HTTP request fails.
+        """
         versions = self._request_versions()
         return [v for v in versions.values()]

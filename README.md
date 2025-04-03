@@ -29,6 +29,7 @@ python3 -m kvm download
     - [Unit Testing](#unit-testing)
     - [Building](#building)
       - [Binary/executable](#binaryexecutable)
+      - [Offline dependencies](#offline-dependencies)
 
 ## Install
 
@@ -107,4 +108,19 @@ Execute it as a binary:
 
 ```bash
 kvm --help
+```
+
+#### Offline dependencies
+
+Playing the devil's advocate on the public Pip gallery and/or package author's, Pip's dependencies can be snapshooted as an offline archive:
+
+```bash
+pip download -r requirements.txt -r development.txt -d pip-deps
+zip -r pip-deps.zip pip-deps
+```
+
+To use:
+
+```bash
+pip install -r requirements.txt -r development.txt --find-links=pip-deps
 ```

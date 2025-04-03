@@ -1,5 +1,6 @@
 # Project
 kubectl
+.ruff_cache
 
 # Mac
 .DS_Store

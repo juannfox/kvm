@@ -6,6 +6,8 @@
         "davidanson.vscode-markdownlint",
         "ms-python.vscode-pylance",
         "ms-python.python",
-        "ms-python.debugpy"
+        "ms-python.debugpy",
+        "charliermarsh.ruff",
+        "redhat.vscode-yaml"
     ]
 }

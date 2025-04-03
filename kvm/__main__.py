@@ -28,7 +28,7 @@ def railguard_execution(
     try:
         with Status(f":hourglass: {action_description.capitalize()}..."):
             return callable(**kwargs)
-    except requests.HTTPError as e:
+    except requests.RequestException as e:
         log.error(
             f"HTTP error {action_description}: {e}"
         )

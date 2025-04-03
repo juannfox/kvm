@@ -27,6 +27,8 @@ python3 -m kvm download
     - [Prepare your environment](#prepare-your-environment)
     - [Pre-commit Hooks](#pre-commit-hooks)
     - [Unit Testing](#unit-testing)
+    - [Building](#building)
+      - [Binary/executable](#binaryexecutable)
 
 ## Install
 
@@ -83,4 +85,26 @@ Run Pytest and calculate coverage:
 
 ```bash
 pytest tests --cov=kvm
+```
+
+### Building
+
+#### Binary/executable
+
+Run:
+
+```bash
+pyinstaller -Fyn kvm --clean kvm/__main__.py
+```
+
+And find the output under `dist/kvm`. Make it executable:
+
+```bash
+chmod +x dist/kvm
+```
+
+Execute it as a binary:
+
+```bash
+kvm --help
 ```

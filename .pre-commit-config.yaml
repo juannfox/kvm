@@ -14,3 +14,11 @@ repos:
     rev: v1.29.0
     hooks:
       - id: yamllint
+  # - repo: https://github.com/markdownlint/markdownlint.git
+  #   rev: v0.13.0
+  #   hooks:
+  #     - id: markdownlint
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.23.1
+    hooks:
+      - id: gitleaks

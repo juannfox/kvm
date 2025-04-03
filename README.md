@@ -47,6 +47,14 @@ Install the dependencies:
 pip install -r development.txt -r requirements.txt
 ```
 
+### Pre-commit Hooks
+
+The [pre-commit](https://pre-commit.com/index.html#intro) framework is used to enforce certain validations on each commit, in the form of [Git Hook scripts](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks).
+
+Installation should be automatic upon commiting, but it can also be manually launched with `pre-commit install`. This uses scripts defined by tooling in their repositories (a `.pre-commit-hooks.yaml` definition file and a version Tag must exist), installs the dependencies as cache and adds the "pre/-commit" script to `.git/hooks`.
+
+Hook execution should also be automatic, but to manually run them, `./.git/hooks/pre-commit` can be executed.
+
 ### Unit Testing
 
 Run Pytest and calculate coverage:

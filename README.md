@@ -21,7 +21,7 @@ python3 -m kvm download
   - [Index](#index)
   - [Install](#install)
   - [Use](#use)
-  - [TODOs](#todos)
+  - [Roadmap (TODOs)](#roadmap-todos)
   - [Development](#development)
     - [IDE](#ide)
     - [Prepare your environment](#prepare-your-environment)
@@ -44,12 +44,14 @@ python3 -m kvm version
 python3 -m kvm --help
 ```
 
-## TODOs
+## Roadmap (TODOs)
 
 1. Add installation to $PATH.
-2. Build with Pyinstaller as executable.
-3. Distribute over Pip.
-4. Extend Unit Testing coverage
+2. Distribute over Pip.
+3. Extend Unit Testing coverage.
+4. Add feature to check installed kubectl version.
+5. Add feature to install downloaded kubectl version.
+6. Add cache layer.
 
 ## Development
 

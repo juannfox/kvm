@@ -8,20 +8,38 @@ KVM by Dalle-2
 
 ## TL;DR
 
-### Install
+```python
+python3 -m kvm download
+```
+
+![KVM usage example](./img/kvm-example.png)
+
+## Index
+
+- [kvm](#kvm)
+  - [TL;DR](#tldr)
+  - [Index](#index)
+  - [Install](#install)
+  - [Use](#use)
+  - [TODOs](#todos)
+  - [Development](#development)
+    - [IDE](#ide)
+    - [Prepare your environment](#prepare-your-environment)
+    - [Pre-commit Hooks](#pre-commit-hooks)
+    - [Unit Testing](#unit-testing)
+
+## Install
 
 ```python
 pip install .
 python3 -m kvm version
 ```
 
-### Use
+## Use
 
 ```python
-python3 -m kvm download
+python3 -m kvm --help
 ```
-
-![KVM usage example](./img/kvm-example.png)
 
 ## TODOs
 
@@ -31,6 +49,10 @@ python3 -m kvm download
 4. Extend Unit Testing coverage
 
 ## Development
+
+### IDE
+
+If using Visual Studio Code, then go ahead and install the recommended Extensions (filter by `@recommended`).
 
 ### Prepare your environment
 

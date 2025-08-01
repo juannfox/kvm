@@ -14,6 +14,7 @@ from kvm.release import ReleaseSpec
 from kvm.logger import log
 from kvm.utils import http_request
 from kvm.index import HTTPVersionIndex
+from kvm.dao import LocalFilesystemDao
 
 
 class ProviderError(Error):
@@ -50,19 +51,22 @@ class HttpProvider():
     def _write_stream_to_file(
             self, response: requests.Response, out_file: str):
         """Write an HTTP response stream to a file."""
-        try:
-            log.debug(f"Writing HTTP response stream to file: '{out_file}'.")
-            with open(out_file, "wb") as f:
-                for chunk in response.iter_content(
-                    chunk_size=DEFAULT_HTTP_CHUNK_SIZE
-                ):
-                    if chunk:
-                        f.write(chunk)
-                f.close()
-        except OSError as e:
-            raise ProviderError(
-                "Failed to write HTTP response stream to file"
-            ) from e
+        # try:
+        #     log.debug(f"Writing HTTP response stream to file: '{out_file}'.")
+        #     with open(out_file, "wb") as f:
+        #         for chunk in response.iter_content(
+        #             chunk_size=DEFAULT_HTTP_CHUNK_SIZE
+        #         ):
+        #             if chunk:
+        #                 f.write(chunk)
+        #         f.close()
+        # except OSError as e:
+        #     raise ProviderError(
+        #         "Failed to write HTTP response stream to file"
+        #     ) from e
+        cache = LocalFilesystemDao()
+        cache.set(response.content)
+        print(cache.list())
 
     def _add_executable_permissions(self, file: str):
         """Add executable permissions to a file."""

@@ -96,7 +96,7 @@ def list():
 @app.command()
 def check(version: str):
     """
-    Check if a Kubeclt version exists; the version should be in the format:
+    Check if a Kubeclt version exists; format should be:
      'vX.Y.Z'.
     """
     release = railguard_execution(

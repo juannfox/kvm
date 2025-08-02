@@ -51,22 +51,19 @@ class HttpProvider():
     def _write_stream_to_file(
             self, response: requests.Response, out_file: str):
         """Write an HTTP response stream to a file."""
-        # try:
-        #     log.debug(f"Writing HTTP response stream to file: '{out_file}'.")
-        #     with open(out_file, "wb") as f:
-        #         for chunk in response.iter_content(
-        #             chunk_size=DEFAULT_HTTP_CHUNK_SIZE
-        #         ):
-        #             if chunk:
-        #                 f.write(chunk)
-        #         f.close()
-        # except OSError as e:
-        #     raise ProviderError(
-        #         "Failed to write HTTP response stream to file"
-        #     ) from e
-        cache = LocalFilesystemDao()
-        cache.set(response.content)
-        print(cache.list())
+        try:
+            log.debug(f"Writing HTTP response stream to file: '{out_file}'.")
+            with open(out_file, "wb") as f:
+                for chunk in response.iter_content(
+                    chunk_size=DEFAULT_HTTP_CHUNK_SIZE
+                ):
+                    if chunk:
+                        f.write(chunk)
+                f.close()
+        except OSError as e:
+            raise ProviderError(
+                "Failed to write HTTP response stream to file"
+            ) from e
 
     def _add_executable_permissions(self, file: str):
         """Add executable permissions to a file."""
@@ -106,5 +103,13 @@ class HttpProvider():
         """Fetch a software release over HTTP."""
         release = self._digest_version(version)
         response = self._request_release(release)
+
+        # TODO Validate to
+        # https://cdn.dl.k8s.io/release/v1.33.3/bin/darwin/arm64/kubectl.sha256
+        cache = LocalFilesystemDao()
+        cache.set(version, response.content)
+        # TODO remove
+        print(cache.list())
+
         self._write_stream_to_file(response, out_file)
         self._add_executable_permissions(out_file)

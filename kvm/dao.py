@@ -1,4 +1,6 @@
-from os import path, makedirs, listdir
+import json
+from kvm.logger import log
+from os import path, makedirs
 from hashlib import sha256
 
 
@@ -8,6 +10,10 @@ class DaoError(Exception):
 
 class EntryNotFoundError(DaoError):
     """An entry not found error in the DAO."""
+
+
+class DuplicateEntryError(DaoError):
+    """An error indicating a duplicate entry in the DAO."""
 
 
 class BinaryDao:
@@ -29,10 +35,9 @@ class BinaryDao:
         """Retrieve an item from the database."""
         return self._db.get(key)
 
-    def set(self, content: bytes):
+    def set(self, key: str, content: bytes):
         """Store an item in the database."""
-        key = self._calculate_checksum(content)
-        self._db[key] = content
+        self._db[key] = self._calculate_checksum(content)
 
     def list(self):
         """List all items in the database."""
@@ -49,49 +54,97 @@ class LocalFilesystemDao(BinaryDao):
     a local file system for binary files.
     """
 
-    def __init__(self, _db_path: str = "/tmp/kvm"):
+    def __init__(
+            self,
+            db_path: str = "/tmp/kvm/versions.json",
+            file_path: str = "/tmp/kvm"):
         """
         Initialize the LocalFilesystemDao with a database.
         :param db: An object to act as the database.
         """
-        self._db_path = _db_path
-        if not path.exists(_db_path):
-            makedirs(_db_path)
+        self._db_path = db_path
+        self._file_path = file_path
+        self._db = dict()
 
-        self._db = set()
-        self._db = self.list()
+        if path.exists(self._db_path):
+            self._db = self._load_db()
 
-    def set(self, value: bytes):
+        if not path.exists(self._file_path):
+            log.debug(f"Initialized database directory at {self._file_path}.")
+            makedirs(self._file_path)
+
+    def _load_db(self):
+        """
+        Load the database from the local filesystem.
+        """
+        local_db = dict()
+        try:
+            with open(self._db_path, "r", encoding="utf-8") as f:
+                log.debug(f"Loading database from {self._db_path}.")
+                local_db = json.load(f)
+        except Exception as e:
+            log.error(
+                f"Failed to load database from {self._db_path}: {e}"
+            )
+        return local_db
+
+    def _dump_db(self):
+        """
+        Dump the database to the local filesystem.
+        """
+
+        try:
+            with open(self._db_path, "w", encoding="utf-8") as f:
+                log.debug(f"Dumping database to {self._db_path}.")
+                json.dump(self._db, f)
+        except Exception as e:
+            log.error(
+                f"Failed to dump database to {self._db_path}: {e}"
+            )
+
+    def set(self, key: str, value: bytes):
         """
         Store a file in the local filesystem.
         :param value: The file content as bytes.
         """
-        checksum = self._calculate_checksum(value)
-        file_path = path.join(self._db_path)
+        if key in self._db.keys():
+            raise DuplicateEntryError(f"Item with key '{key}' already exists.")
 
-        try:
-            with open(path.join(self._db_path, checksum), "wb") as f:
-                f.write(value)
-                self._db.add(checksum)
-        except OSError as e:
-            raise IOError(f"Failed to write file to {file_path}.") from e
+        checksum = self._calculate_checksum(value)
+        file_path = path.join(self._file_path, checksum)
+
+        if not path.exists(file_path):
+            try:
+                with open(file_path, "wb") as f:
+                    log.debug(
+                        f"Storing file '{key}={checksum}' at {file_path}."
+                    )
+                    f.write(value)
+                    self._db[key] = checksum
+                    self._dump_db()
+            except OSError as e:
+                raise IOError(f"Failed to write file to {file_path}.") from e
+        else:
+            raise DuplicateEntryError(
+                f"File '{key}={checksum}' already exists."
+            )
 
     def get(self, key: str):
         """Retrieve a file from the local filesystem."""
-        if key not in self._db:
-            raise EntryNotFoundError(f"File with key '{key}' not found.")
+        if key not in self._db.keys():
+            raise EntryNotFoundError(f"Item with key '{key}' not found.")
 
-        file_path = path.join(self._db_path, key)
+        file_path = path.join(self._file_path, key)
         if not path.exists(file_path):
-            raise EntryNotFoundError(f"File {file_path} not found.")
+            raise EntryNotFoundError(f"File '{key}={file_path}' not found.")
 
         try:
             with open(file_path, "rb") as f:
+                log.debug(f"Retrieving file '{key}' from {file_path}.")
                 return f.read()
         except OSError as e:
             raise IOError(f"Failed to read file from {file_path}.") from e
 
     def list(self):
         """List all files in the local filesystem."""
-        files = listdir(self._db_path)
-        return {f.replace(self._db_path, "") for f in files}
+        return [f"{key}={checksum}" for key, checksum in self._db.items()]

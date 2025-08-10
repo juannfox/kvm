@@ -46,12 +46,11 @@ class ChecksumFilestoreDao:
         """List all available files in the filestore."""
         files = listdir(self.location)
         filtered_files = [
-            f"{self.location}/{file}" for file in files
+            f"{self.location}/{file}"
+            for file in files
             if Sha256Checksum.is_valid(file)
         ]
-        log.debug(
-            f"Found {len(filtered_files)} files in the filestore."
-        )
+        log.debug(f"Found {len(filtered_files)} files in the filestore.")
         return filtered_files
 
     def get(self, checksum: Sha256Checksum) -> str:
@@ -60,9 +59,7 @@ class ChecksumFilestoreDao:
         files = listdir(self.location)
         for file in files:
             if file == str(checksum):
-                log.debug(
-                    f"Found '{self.location}/{file}'."
-                )
+                log.debug(f"Found '{self.location}/{file}'.")
                 item = f"{self.location}/{file}"
                 break
 
@@ -85,9 +82,7 @@ class ChecksumFilestoreDao:
                     f"Failed to write '{str(checksum)}' to {file_path}."
                 ) from e
         else:
-            log.warning(
-                f"File '{str(checksum)}' already exists, skipping."
-            )
+            log.warning(f"File '{str(checksum)}' already exists, skipping.")
 
         return checksum
 
@@ -99,12 +94,10 @@ class ChecksumFilestoreDao:
             try:
                 remove(file)
             except OSError as e:
-                raise DaoError(
-                    "Failed to clear the checksum database."
-                ) from e
+                raise DaoError("Failed to clear the checksum database.") from e
 
 
-class LocalFilestoreDao():
+class LocalFilestoreDao:
     """
     Local key=value filesystem DAO to interact.
     """
@@ -136,10 +129,6 @@ class LocalFilestoreDao():
         db_exists = path.exists(self.registry_file)
 
         try:
-            self.registry = open(
-                self.registry_file, "a+", encoding=DEFAULT_ENCODING
-            )
-
             if db_exists:
                 self._load()
             else:
@@ -147,8 +136,7 @@ class LocalFilestoreDao():
                 self._dump({})
 
             log.debug(
-                f"Working with local filestore db at: "
-                f"{self.registry_file}."
+                f"Working with local filestore db at: {self.registry_file}."
             )
 
         except OSError as e:
@@ -163,7 +151,10 @@ class LocalFilestoreDao():
     def _load(self) -> dict:
         "Load the database from the local filesystem."
         try:
-            return json.load(self.registry)
+            registry = open(
+                self.registry_file, "r", encoding=DEFAULT_ENCODING
+            )
+            return json.load(registry)
         except Exception as e:
             log.error(
                 f"Failed to load the database from {self.registry_file}, "
@@ -173,7 +164,15 @@ class LocalFilestoreDao():
 
     def _dump(self, data: dict):
         """Dump the database to the local filesystem."""
-        json.dump(data, self.registry)
+        try:
+            registry = open(
+                self.registry_file, "w", encoding=DEFAULT_ENCODING
+            )
+            json.dump(data, registry)
+        except Exception:
+            log.error(
+                f"Failed to dump data to the database at {self.registry_file}."
+            )
 
     def set(self, key: str, value: bytes):
         """
@@ -197,7 +196,7 @@ class LocalFilestoreDao():
             item = {
                 "key": key,
                 "checksum": Sha256Checksum(current_data[key]),
-                "file": self.filestore.get(current_data[key])
+                "file": self.filestore.get(current_data[key]),
             }
         return item
 

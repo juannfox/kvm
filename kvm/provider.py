@@ -150,7 +150,7 @@ class HttpProvider:
         cache = LocalFilestoreDao()
         cached_file = cache.get(version)
 
-        if cached_file and cached_file['checksum'] == checksum:
+        if cached_file and str(cached_file['checksum']) == checksum:
             log.debug(
                 f"Found cached file for {version}: "
                 f"{cached_file['file']} "

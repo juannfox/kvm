@@ -1,7 +1,12 @@
 from platform import uname
 import requests
+from re import match
+from hashlib import sha256
 
-from kvm.const import SUPPORTED_ARCHS, SUPPORTED_OSES, DEFAULT_HTTP_TIMEOUT
+from kvm.const import (
+    SUPPORTED_ARCHS, SUPPORTED_OSES,
+    DEFAULT_HTTP_TIMEOUT, CHECKSUM_REGEX
+)
 from kvm.logger import log
 
 
@@ -45,3 +50,34 @@ def http_request(
         return response
     except Exception as e:
         raise requests.HTTPError("Failed to make HTTP request.") from e
+
+
+class Sha256Checksum:
+    """Class to represent SHA-256 checksums."""
+
+    def __init__(self, checksum: str):
+        checksum = checksum.strip().lower()
+        if not self.is_valid(checksum):
+            raise ValueError(f"Invalid SHA-256 checksum: {checksum}")
+        self.value = checksum
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return f"Sha256Checksum({self.value})"
+
+    @staticmethod
+    def is_valid(checksum: str) -> bool:
+        """Validate the format of a SHA-256 checksum."""
+        return bool(match(CHECKSUM_REGEX, checksum.strip().lower()))
+
+    @staticmethod
+    def calculate_checksum(content: bytes) -> str:
+        """
+        Calculate a checksum for the given key.
+        """
+        # Receive a stream object
+        checksum = sha256()
+        checksum.update(content)
+        return Sha256Checksum(checksum.hexdigest())

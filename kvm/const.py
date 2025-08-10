@@ -12,6 +12,15 @@ VERSION_REGEX_MINOR = r"^v?\d+\.\d+$"  # e.g 'v1.29'
 CHECKSUM_REGEX = r'^[a-f0-9]{64}$'  # SHA-256 checksum format
 LOG_LEVEL = "DEBUG" if getenv("DEBUG") == "1" else "INFO"
 
+# region Cache Filestore
+TEMP_DIR_ENV_VAR_UNIX = "TMPDIR"
+TEMP_DIR_ENV_VAR_WINDOWS = "TEMP"
+FILESTORE_LOCATION_TEMPLATE = "{temp_dir}kvm"
+FILESTORE_LOCATION_FALLBACK = "/tmp/kvm"
+FILESTORE_CHECKSUMS_DIR = "checksums"
+FILESTORE_REGISTRY_FILE = "registry.json"
+# endregion
+
 # region URLs
 LATEST_VERSION_ENDPOINT_URL = "https://cdn.dl.k8s.io/release/stable.txt"
 VERSION_INDEX_URL = (

@@ -1,8 +1,17 @@
 import json
-from os import path, makedirs, listdir, remove
+from os import path, makedirs, listdir, remove, getenv
 
 from kvm.logger import log
-from kvm.utils import Sha256Checksum
+from kvm.const import (
+    DEFAULT_ENCODING,
+    FILESTORE_CHECKSUMS_DIR,
+    FILESTORE_LOCATION_TEMPLATE,
+    FILESTORE_REGISTRY_FILE,
+    FILESTORE_LOCATION_FALLBACK,
+    TEMP_DIR_ENV_VAR_UNIX,
+    TEMP_DIR_ENV_VAR_WINDOWS,
+)
+from kvm.utils import Sha256Checksum, detect_platform
 
 
 class DaoError(Exception):
@@ -23,7 +32,7 @@ class ChecksumFilestoreDao:
     a database for checksums.
     """
 
-    def __init__(self, location: str = "/tmp/kvm"):
+    def __init__(self, location: str):
         """
         Initialize the ChecksumDao with a database.
         :param db_path: The path to the database file.
@@ -71,16 +80,16 @@ class ChecksumFilestoreDao:
                         f"Storing file '{str(checksum)}' at '{self.location}'."
                     )
                     f.write(content)
-
-                    return checksum
             except OSError as e:
                 raise IOError(
                     f"Failed to write '{str(checksum)}' to {file_path}."
                 ) from e
         else:
-            raise DuplicateEntryError(
-                f"Checksum '{str(checksum)}' already exists at {file_path}."
+            log.warning(
+                f"File '{str(checksum)}' already exists, skipping."
             )
+
+        return checksum
 
     def clear(self):
         """Clear the checksum database."""
@@ -102,29 +111,45 @@ class LocalFilestoreDao():
 
     def __init__(
         self,
-        registry_file: str = "/tmp/kvm/versions.json",
-        filestore: str = "/tmp/kvm",
+        filestore_location_template: str = FILESTORE_LOCATION_TEMPLATE,
+        registry_file: str = FILESTORE_REGISTRY_FILE,
+        filestore_dir: str = FILESTORE_CHECKSUMS_DIR,
     ):
         """
         Initialize the LocalFilesystemDao with a database.
         :param db: An object to act as the database.
         """
-        self.registry_file = registry_file
-        self.filestore = ChecksumFilestoreDao(location=filestore)
+        if detect_platform() == "windows":
+            temp_dir_env_var = TEMP_DIR_ENV_VAR_WINDOWS
+        else:
+            temp_dir_env_var = TEMP_DIR_ENV_VAR_UNIX
+
+        self.filestore_location = filestore_location_template.format(
+            temp_dir=getenv(temp_dir_env_var, FILESTORE_LOCATION_FALLBACK)
+        )
+
+        self.registry_file = f"{self.filestore_location}/{registry_file}"
+        self.filestore = ChecksumFilestoreDao(
+            location=f"{self.filestore_location}/{filestore_dir}"
+        )
 
         db_exists = path.exists(self.registry_file)
 
         try:
-            with open(self.registry_file, "w", encoding="utf-8") as f:
-                log.debug(
-                    f"Creating new database at {self.registry_file}."
-                )
-                self.registry = f
+            self.registry = open(
+                self.registry_file, "a+", encoding=DEFAULT_ENCODING
+            )
 
-                if db_exists:
-                    self._load()
-                else:
-                    self._dump({})
+            if db_exists:
+                self._load()
+            else:
+                log.debug("Bootstrapping filestore db.")
+                self._dump({})
+
+            log.debug(
+                f"Working with local filestore db at: "
+                f"{self.registry_file}."
+            )
 
         except OSError as e:
             raise DaoError(
@@ -139,7 +164,11 @@ class LocalFilestoreDao():
         "Load the database from the local filesystem."
         try:
             return json.load(self.registry)
-        except Exception:
+        except Exception as e:
+            log.error(
+                f"Failed to load the database from {self.registry_file}, "
+                f"falling back to empty database: {e}"
+            )
             return {}
 
     def _dump(self, data: dict):
@@ -154,7 +183,7 @@ class LocalFilestoreDao():
         current_data = self._load()
         if key not in current_data.keys():
             checksum = self.filestore.set(value)
-            current_data[key] = checksum
+            current_data[key] = str(checksum)
             self._dump(current_data)
             log.debug(f"Stored file '{key}' in the local filesystem.")
         else:
@@ -167,7 +196,7 @@ class LocalFilestoreDao():
         if key in current_data.keys():
             item = {
                 "key": key,
-                "checksum": current_data[key],
+                "checksum": Sha256Checksum(current_data[key]),
                 "file": self.filestore.get(current_data[key])
             }
         return item
@@ -176,7 +205,7 @@ class LocalFilestoreDao():
         """List all files in the local filesystem."""
         current_data = self._load()
         items = [f"{key}={checksum}" for key, checksum in current_data.items()]
-        log.debug(f"Listing {len(items)} items in the local registry.")
+        log.debug(f"Found {len(items)} items in the local registry.")
         return items
 
     def clear(self):

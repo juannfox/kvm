@@ -11,7 +11,7 @@ from kvm.const import (
     RELEASE_GET_URL_TEMPLATE,
     DEFAULT_HTTP_CHUNK_SIZE,
     DEFAULT_KUBECTL_OUT_FILE,
-    CHECKSUM_URL_TEMPLATE
+    CHECKSUM_URL_TEMPLATE,
 )
 from kvm.release import ReleaseSpec
 from kvm.logger import log
@@ -150,13 +150,13 @@ class HttpProvider:
         cache = LocalFilestoreDao()
         cached_file = cache.get(version)
 
-        if cached_file and str(cached_file['checksum']) == checksum:
+        if cached_file and str(cached_file["checksum"]) == checksum:
             log.debug(
                 f"Found cached file for {version}: "
                 f"{cached_file['file']} "
                 f"({cached_file['checksum']})."
             )
-            copyfile(cached_file['file'], out_file)
+            copyfile(cached_file["file"], out_file)
         else:
             log.debug(f"Release {version} not found in cache, downloading.")
             response = self._request_release(release)
@@ -177,6 +177,3 @@ class HttpProvider:
                 )
 
         self._add_executable_permissions(out_file)
-
-        # TODO remove
-        cache.list()

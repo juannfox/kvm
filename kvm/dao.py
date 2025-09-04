@@ -151,9 +151,7 @@ class LocalFilestoreDao:
     def _load(self) -> dict:
         "Load the database from the local filesystem."
         try:
-            registry = open(
-                self.registry_file, "r", encoding=DEFAULT_ENCODING
-            )
+            registry = open(self.registry_file, "r", encoding=DEFAULT_ENCODING)
             return json.load(registry)
         except Exception as e:
             log.error(
@@ -165,9 +163,7 @@ class LocalFilestoreDao:
     def _dump(self, data: dict):
         """Dump the database to the local filesystem."""
         try:
-            registry = open(
-                self.registry_file, "w", encoding=DEFAULT_ENCODING
-            )
+            registry = open(self.registry_file, "w", encoding=DEFAULT_ENCODING)
             json.dump(data, registry)
         except Exception:
             log.error(

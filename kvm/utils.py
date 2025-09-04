@@ -13,6 +13,8 @@ def detect_platform() -> tuple:
         raise ValueError(f"Unsupported OS: {os}.")
     if arch not in SUPPORTED_ARCHS:
         raise ValueError(f"Unsupported architecture: {arch}.")
+    if arch == "aarch64":
+        arch = "arm64"
 
     log.debug(f"Working on platform '{os} {arch}'.")
 

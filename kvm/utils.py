@@ -2,10 +2,13 @@ from platform import uname
 import requests
 from re import match
 from hashlib import sha256
+from os import path, access, W_OK
 
 from kvm.const import (
-    SUPPORTED_ARCHS, SUPPORTED_OSES,
-    DEFAULT_HTTP_TIMEOUT, CHECKSUM_REGEX
+    SUPPORTED_ARCHS,
+    SUPPORTED_OSES,
+    DEFAULT_HTTP_TIMEOUT,
+    CHECKSUM_REGEX,
 )
 from kvm.logger import log
 
@@ -25,18 +28,16 @@ def detect_platform() -> tuple:
 
 
 def http_request(
-        url: str,
-        method: str = "GET",
-        stream: bool = False,
-        check_status: bool = True,
-        timeout: int = DEFAULT_HTTP_TIMEOUT) -> requests.Response:
+    url: str,
+    method: str = "GET",
+    stream: bool = False,
+    check_status: bool = True,
+    timeout: int = DEFAULT_HTTP_TIMEOUT,
+) -> requests.Response:
     """Make an HTTP request."""
     try:
         response = requests.request(
-            method=method,
-            url=url,
-            stream=stream,
-            timeout=timeout
+            method=method, url=url, stream=stream, timeout=timeout
         )
         response.raise_for_status()
         if check_status and (
@@ -81,3 +82,12 @@ class Sha256Checksum:
         checksum = sha256()
         checksum.update(content)
         return Sha256Checksum(checksum.hexdigest())
+
+
+def check_path_writable(check_path: str) -> bool:
+    exists = path.exists(check_path)
+    writable = access(check_path, W_OK)
+    log.debug(
+        f"Access for path '{check_path}': exists={exists}, writable={writable}."
+    )
+    return exists and writable

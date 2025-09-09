@@ -72,9 +72,7 @@ class HttpProvider:
                 f"template {self.checksum_template}."
             ) from e
 
-    def _write_stream_to_file(
-            self, response: requests.Response,
-            out_file: str):
+    def _write_stream_to_file(self, response: requests.Response, out_file: str):
         """Write an HTTP response stream to a file."""
         try:
             log.debug(f"Writing HTTP response stream to file: '{out_file}'.")
@@ -148,30 +146,34 @@ class HttpProvider:
         checksum = self._request_checksum(release)
 
         cache = LocalFilestoreDao()
-        cached_file = cache.get(version)
+        cached_file = cache.get(release.version)
 
         if cached_file and str(cached_file["checksum"]) == checksum:
             log.debug(
-                f"Found cached file for {version}: "
+                f"Found cached file for {release.version}: "
                 f"{cached_file['file']} "
                 f"({cached_file['checksum']})."
             )
             copyfile(cached_file["file"], out_file)
         else:
-            log.debug(f"Release {version} not found in cache, downloading.")
+            log.debug(
+                f"Release {release.version} not found in cache, downloading."
+            )
             response = self._request_release(release)
             downloaded_checksum = Sha256Checksum.calculate_checksum(
                 response.content
             )
             if str(downloaded_checksum) == checksum:
                 log.debug(
-                    f"Checksum for download of {version} is valid: {checksum}."
+                    f"Checksum for download of {release.version} is valid: "
+                    f"{checksum}."
                 )
-                cache.set(version, response.content)
+                cache.set(release.version, response.content)
                 self._write_stream_to_file(response, out_file)
             else:
                 raise ProviderError(
-                    f"Checksum mismatch for downloaded release '{version}'. "
+                    f"Checksum mismatch for downloaded release "
+                    f"'{release.version}'. "
                     f"Expected '{checksum}', "
                     f"got: '{downloaded_checksum}."
                 )

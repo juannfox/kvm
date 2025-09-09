@@ -29,17 +29,17 @@ class DuplicateEntryError(DaoError):
 class ChecksumFilestoreDao:
     """
     Data Access Object to interact with
-    a database for checksums.
+    a Filestore of checksum-based blobs.
     """
 
     def __init__(self, location: str):
         """
-        Initialize the ChecksumDao with a database.
+        Initialize the ChecksumDao with a Filestore.
         :param db_path: The path to the database file.
         """
         self.location = location
         if not path.exists(self.location):
-            log.debug(f"Initialized database directory at {self.location}.")
+            log.debug(f"Initialized Filestore directory at {self.location}.")
             makedirs(self.location)
 
     def list(self) -> str:
@@ -99,7 +99,8 @@ class ChecksumFilestoreDao:
 
 class LocalFilestoreDao:
     """
-    Local key=value filesystem DAO to interact.
+    Local indexed (key-value) DAO to interact with
+    a Filestore of checksum-based blobs.
     """
 
     def __init__(
@@ -126,10 +127,8 @@ class LocalFilestoreDao:
             location=f"{self.filestore_location}/{filestore_dir}"
         )
 
-        db_exists = path.exists(self.registry_file)
-
         try:
-            if db_exists:
+            if path.exists(self.registry_file):
                 self._load()
             else:
                 log.debug("Bootstrapping filestore db.")

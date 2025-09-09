@@ -19,8 +19,8 @@ python3 -m kvm download
 - [kvm](#kvm)
   - [TL;DR](#tldr)
   - [Index](#index)
-  - [Install](#install)
-  - [Use](#use)
+  - [Installation](#installation)
+  - [Usage](#usage)
   - [Roadmap (TODOs)](#roadmap-todos)
   - [Development](#development)
     - [IDE](#ide)
@@ -31,14 +31,24 @@ python3 -m kvm download
       - [Binary/executable](#binaryexecutable)
       - [Offline dependencies](#offline-dependencies)
 
-## Install
+## Installation
 
 ```python
 pip install .
 python3 -m kvm version
 ```
 
-## Use
+## Usage
+
+To install a given version:
+
+```python
+python3 -m kvm install 1.32
+```
+
+The above will look for the latest path of v1.32, download (and cache) the binary and install it on PATH.
+
+Or use the help flag to view all the options:
 
 ```python
 python3 -m kvm --help
@@ -46,12 +56,9 @@ python3 -m kvm --help
 
 ## Roadmap (TODOs)
 
-1. Add installation to $PATH.
-2. Distribute over Pip.
-3. Extend Unit Testing coverage.
-4. Add feature to check installed kubectl version.
-5. Add feature to install downloaded kubectl version.
-6. Add cache layer.
+1. Distribute over Pip.
+2. Extend Unit Testing coverage.
+3. Add feature to check installed kubectl version.
 
 ## Development
 

@@ -129,7 +129,13 @@ kvm --help
 #### Using Pip instead of Uv
 
 ```bash
+pip install -r requirements.txt -r development.txt
+```
+
+The real source for dependencies is `pyproject.toml`, so to keep the
+requirement files up to date, run:
+
+```bash
 uv export --format requirements.txt --no-dev --no-hashes > requirements.txt
 uv export --format requirements.txt --only-dev --no-hashes > development.txt
-pip install -r requirements.txt -r development.txt
 ```

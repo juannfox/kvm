@@ -58,8 +58,22 @@ app = typer.Typer(
 
 
 @app.callback()
-def main(ctx: typer.Context):
+def main(
+    ctx: typer.Context,
+    log_level: Annotated[
+        Optional[str],
+        typer.Option(
+            "--log-level",
+            "-l",
+            envvar="KVM_LOG_LEVEL",
+            help="Set the logging level (DEBUG/INFO/WARNING/ERROR/CRITICAL).",
+        ),
+    ] = "INFO",
+):
     """Init for Typer app"""
+    if log_level:
+        log.setLevel(log_level.upper())
+        log.debug(f"Log level set to {log_level.upper()}")
     log.debug(f"Starting Typer app's subcommand '{ctx.invoked_subcommand}'")
     log.debug(f" User executed: {argv}.")
 
@@ -115,7 +129,7 @@ def download(
     ] = None,
     out_file: Annotated[
         Optional[str], typer.Argument(envvar="KVM_OUT_FILE")
-    ] = f"{DEFAULT_KUBECTL_DOWNLOAD_PATH}/{DEFAULT_KUBECTL_OUT_FILE}-<version>",
+    ] = f"{DEFAULT_KUBECTL_DOWNLOAD_PATH}/{DEFAULT_KUBECTL_OUT_FILE}-<vX.Y.Z>",
 ):
     """
     Download a kubectl release. If no version is specified, the latest will

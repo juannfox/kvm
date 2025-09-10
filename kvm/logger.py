@@ -1,13 +1,12 @@
 import logging
 from rich.logging import RichHandler
 from rich import pretty
-from os import getenv
 
 from kvm.const import LOG_LEVEL
 
 # Logger
 logging.basicConfig(
-    level=getenv("LOG_LEVEL", LOG_LEVEL).upper(),
+    level=LOG_LEVEL.upper(),
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandler()],

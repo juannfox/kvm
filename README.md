@@ -24,17 +24,18 @@ python3 -m kvm download
   - [Roadmap (TODOs)](#roadmap-todos)
   - [Development](#development)
     - [IDE](#ide)
+    - [Package manager (dependencies)](#package-manager-dependencies)
     - [Prepare your environment](#prepare-your-environment)
     - [Pre-commit Hooks](#pre-commit-hooks)
     - [Unit Testing](#unit-testing)
     - [Building](#building)
       - [Binary/executable](#binaryexecutable)
-      - [Offline dependencies](#offline-dependencies)
+      - [Using Pip instead of Uv](#using-pip-instead-of-uv)
 
 ## Installation
 
 ```python
-pip install .
+uv pip install .
 python3 -m kvm version
 ```
 
@@ -66,19 +67,25 @@ python3 -m kvm --help
 
 If using Visual Studio Code, then go ahead and install the recommended Extensions (filter by `@recommended`).
 
+### Package manager (dependencies)
+
+This project uses [uv](https://docs.astral.sh/uv/guides/install-python/) as opposed to the customary `pip` because of the many advantages of the former (speed, managed virtual environments, managed python versions, clearer dependency management, etc).
+
+You can still use `pip` instead of `uv`, in case you prefer it. Refer to [Using Pip instead of Uv](#using-pip-instead-of-uv).
+
 ### Prepare your environment
 
 Create a Virtual Environment:
 
 ```bash
-python -m venv venv
-source venv/bin/activate
+uv venv
+source .venv/bin/activate
 ```
 
 Install the dependencies:
 
 ```bash
-pip install -r development.txt -r requirements.txt
+uv sync
 ```
 
 ### Pre-commit Hooks
@@ -119,17 +126,10 @@ Execute it as a binary:
 kvm --help
 ```
 
-#### Offline dependencies
-
-Playing the devil's advocate on the public Pip gallery and/or package author's, Pip's dependencies can be snapshooted as an offline archive:
+#### Using Pip instead of Uv
 
 ```bash
-pip download -r requirements.txt -r development.txt -d pip-deps
-zip -r pip-deps.zip pip-deps
-```
-
-To use:
-
-```bash
-pip install -r requirements.txt -r development.txt --find-links=pip-deps
+uv export --format requirements.txt --no-dev --no-hashes > requirements.txt
+uv export --format requirements.txt --only-dev --no-hashes > development.txt
+pip install -r requirements.txt -r development.txt
 ```

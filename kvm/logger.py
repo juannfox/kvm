@@ -10,7 +10,7 @@ logging.basicConfig(
     level=getenv("LOG_LEVEL", LOG_LEVEL).upper(),
     format="%(message)s",
     datefmt="[%X]",
-    handlers=[RichHandler()]
+    handlers=[RichHandler()],
 )
 log = logging.getLogger("rich")
 
